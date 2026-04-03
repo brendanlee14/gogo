@@ -1054,9 +1054,11 @@ let seedVal='',seedLocked=false;
 let curFsId=null,wizStep=0,wizPortrait=null;
 
 // ── Navigation ──
+const SCREEN_IDS={gallery:'scrGallery',character:'scrChar',settings:'scrSettings'};
 function showScreen(name){
   if(name===curScreen)return;
-  const from=$('scr-'+curScreen),to=$('scr-'+name);
+  const from=$(SCREEN_IDS[curScreen]),to=$(SCREEN_IDS[name]);
+  if(!from||!to)return;
   const back=name==='gallery';
   if(back){
     from.classList.add('right');
@@ -1069,7 +1071,6 @@ function showScreen(name){
   curScreen=name;
   if(name==='gallery')renderGallery();
   if(name==='settings')syncSettings();
-  if(name==='character'){}
 }
 const $=id=>document.getElementById(id);
 const raf=fn=>requestAnimationFrame(fn);
