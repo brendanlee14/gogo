@@ -1,0 +1,1588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="theme-color" content="#080406">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GoGo">
+<title>GoGo</title>
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+
+:root{
+  --bg:#080406;--sf:#130b10;--sf2:#1c1118;--sf3:#261620;
+  --prim:#7d1a2b;--priml:#a8243a;--acc:#c8a44a;--accd:#8f7433;
+  --cream:#f2ede4;--creamd:#b5ada0;--muted:#6a5e52;
+  --bdr:#31161e;--bdrl:#3e1e28;
+  --serif:'Cormorant Garamond',Georgia,serif;--sans:'Jost',system-ui,sans-serif;
+  --st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px);
+  --r:16px;--rs:10px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--cream);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+#app{position:fixed;inset:0;overflow:hidden}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg);transition:transform .3s cubic-bezier(.4,0,.2,1),opacity .3s;will-change:transform}
+.screen.right{transform:translateX(100%)}
+.screen.left{transform:translateX(-26%);opacity:.45}
+.nav{flex-shrink:0;display:flex;align-items:center;gap:10px;padding:calc(var(--st) + 12px) 16px 12px;background:var(--sf);border-bottom:1px solid var(--bdr);min-height:calc(var(--st) + 56px)}
+.navG{flex:1;overflow:hidden}
+.navW{display:block;font-size:10px;font-weight:400;color:var(--acc);letter-spacing:.15em;text-transform:uppercase;margin-bottom:1px}
+.navT{font-family:var(--serif);font-size:22px;font-weight:600;letter-spacing:.02em}
+.iBtn{width:40px;height:40px;border-radius:50%;border:1px solid var(--bdrl);background:var(--sf2);color:var(--creamd);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background .15s}
+.iBtn:active{background:var(--sf3)}
+.iBtn svg{width:20px;height:20px;stroke-width:1.5}
+.iBtnG{background:rgba(8,4,6,.6)!important;border-color:rgba(255,255,255,.13)!important}
+.gScroll{flex:1;overflow-y:auto;padding:14px;padding-bottom:calc(14px + var(--sb));-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.gScroll::-webkit-scrollbar{display:none}
+.gGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.card{background:var(--sf);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;cursor:pointer;aspect-ratio:2/3;position:relative;transition:transform .15s}
+.card:active{transform:scale(.95)}
+.card-img{width:100%;height:100%;object-fit:cover;display:block}
+.card-ph{width:100%;height:100%;background:linear-gradient(155deg,var(--sf2) 0%,var(--sf3) 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+.card-ph svg{width:36px;height:36px;color:var(--muted);opacity:.4}
+.card-ph span{font-size:11px;color:var(--muted)}
+.card-ov{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(8,4,6,.93) 38%);padding:28px 12px 12px}
+.card-name{font-family:var(--serif);font-size:17px;font-weight:600;text-shadow:0 1px 6px rgba(0,0,0,.9)}
+.card-role{font-size:10px;color:var(--acc);text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+.cntB{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:3px 9px;font-size:11px;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:4px}
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:48px 32px;text-align:center}
+.emptyIcon{font-size:52px;opacity:.25}
+.empty h2{font-family:var(--serif);font-size:26px;font-weight:600;color:var(--creamd)}
+.empty p{font-size:14px;color:var(--muted);line-height:1.6}
+.fab{position:fixed;bottom:calc(20px + var(--sb));right:18px;width:54px;height:54px;border-radius:50%;background:linear-gradient(140deg,var(--prim),var(--priml));border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 24px rgba(125,26,43,.55);transition:transform .15s;z-index:90}
+.fab:active{transform:scale(.9)}
+.fab svg{width:24px;height:24px;stroke-width:2}
+#scrChar .nav{position:absolute;top:0;left:0;right:0;background:transparent;border:none;z-index:20}
+.dScroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(20px + var(--sb));scrollbar-width:none}
+.dScroll::-webkit-scrollbar{display:none}
+.crslWrap{background:#000;position:relative;flex-shrink:0}
+.crsl{display:flex;overflow-x:scroll;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.crsl::-webkit-scrollbar{display:none}
+.crslSlide{flex:0 0 100vw;scroll-snap-align:start;cursor:pointer}
+.crslSlide img,.crslPh{width:100vw;height:min(58vh,440px);object-fit:cover;display:block}
+.crslPh{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:linear-gradient(155deg,var(--sf),var(--sf2))}
+.crslPh svg{width:52px;height:52px;color:var(--muted);opacity:.35}
+.crslPh p{font-size:13px;color:var(--muted)}
+.crslGT{position:absolute;top:0;left:0;right:0;height:100px;background:linear-gradient(to bottom,rgba(8,4,6,.72),transparent);pointer-events:none}
+.crslGB{position:absolute;bottom:0;left:0;right:0;height:56px;background:linear-gradient(to top,rgba(8,4,6,.8),transparent);pointer-events:none;display:flex;align-items:flex-end;justify-content:center;padding-bottom:10px}
+.dots{display:flex;gap:5px;align-items:center}
+.dot{background:rgba(255,255,255,.35);border-radius:3px;height:5px;width:5px;transition:width .25s,background .25s}
+.dot.on{background:var(--acc);width:16px}
+.dBody{padding:16px}
+.dNR{display:flex;align-items:baseline;gap:10px;margin-bottom:3px}
+.dName{font-family:var(--serif);font-size:30px;font-weight:600;line-height:1}
+.rBadge{font-size:11px;color:var(--acc);text-transform:uppercase;letter-spacing:.1em}
+.dMeta{font-size:13px;color:var(--muted);margin-bottom:18px}
+.sHead{font-size:10px;font-weight:600;color:var(--acc);text-transform:uppercase;letter-spacing:.14em;margin:18px 0 8px;display:flex;align-items:center;gap:8px}
+.sHead::after{content:'';flex:1;height:1px;background:var(--bdr)}
+.infoCard{background:var(--sf);border:1px solid var(--bdr);border-radius:var(--rs);padding:10px 14px;margin-bottom:12px}
+.infoRow{display:flex;justify-content:space-between;font-size:13px;padding:3px 0}
+.iKey{color:var(--muted)}.iVal{color:var(--creamd);text-align:right;max-width:65%}
+.pickerRow{display:flex;gap:8px;margin-bottom:8px}
+.pickerBtn{flex:1;background:var(--sf);border:1px solid var(--bdr);border-radius:var(--rs);padding:10px 12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;color:var(--cream);font-family:var(--sans);gap:6px;transition:background .15s}
+.pickerBtn:active{background:var(--sf2)}
+.pbLbl{color:var(--muted);font-size:11px;display:block;margin-bottom:1px}
+.pbVal{color:var(--creamd);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
+.pickerBtn svg{width:14px;height:14px;color:var(--muted);flex-shrink:0}
+.togs{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:8px}
+.tog{padding:8px 13px;border-radius:20px;border:1px solid var(--bdrl);background:var(--sf);color:var(--creamd);font-size:13px;cursor:pointer;transition:all .15s;font-family:var(--sans)}
+.tog.on{background:rgba(125,26,43,.35);border-color:var(--priml);color:var(--cream)}
+.seedWrap{display:flex;gap:8px;margin-bottom:8px}
+.seedInp{flex:1;background:var(--sf);border:1px solid var(--bdr);border-radius:var(--rs);padding:10px 12px;color:var(--cream);font-family:var(--sans);font-size:14px;font-variant-numeric:tabular-nums}
+.seedInp::placeholder{color:var(--muted)}
+.seedInp:focus{outline:none;border-color:var(--accd)}
+.seedLocked .seedInp{border-color:rgba(200,164,74,.5)}
+.seedBtn{padding:10px 12px;border-radius:var(--rs);border:1px solid var(--bdr);background:var(--sf);color:var(--creamd);font-size:12px;font-family:var(--sans);cursor:pointer;transition:all .15s;white-space:nowrap}
+.seedBtn.locked{border-color:var(--accd);color:var(--acc);background:rgba(200,164,74,.08)}
+.presetScroll{display:flex;overflow-x:auto;gap:7px;padding-bottom:4px;scrollbar-width:none;margin-bottom:8px}
+.presetScroll::-webkit-scrollbar{display:none}
+.ppill{flex-shrink:0;padding:6px 13px;border-radius:20px;border:1px solid var(--bdr);background:var(--sf2);color:var(--creamd);font-size:12px;cursor:pointer;white-space:nowrap;font-family:var(--sans);transition:all .15s;display:flex;align-items:center;gap:5px}
+.ppill:active{background:var(--sf3)}
+.ppill.save{border-style:dashed;border-color:var(--accd);color:var(--acc)}
+.ppDel{color:var(--muted);font-size:15px;line-height:1;margin-left:2px}
+.promptSt{font-size:11px;color:var(--muted);padding:4px 0;font-style:italic;min-height:18px}
+.genBtn{width:100%;padding:15px;background:linear-gradient(135deg,var(--prim) 0%,var(--priml) 100%);border:none;border-radius:var(--r);color:#fff;font-family:var(--serif);font-size:19px;font-weight:600;letter-spacing:.05em;cursor:pointer;position:relative;overflow:hidden;transition:transform .15s,opacity .15s;margin-top:14px;margin-bottom:20px}
+.genBtn:not([disabled]):active{transform:scale(.98)}
+.genBtn[disabled]{opacity:.5}
+.genBtnTxt{transition:opacity .2s}
+.genBtnLoad{position:absolute;inset:0;display:none;align-items:center;justify-content:center;gap:10px}
+.genBtn.loading .genBtnTxt{opacity:0}
+.genBtn.loading .genBtnLoad{display:flex}
+.spinRing{width:20px;height:20px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .75s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.dangerRow{margin-top:16px;padding-top:16px;border-top:1px solid var(--bdr);display:flex;justify-content:center}
+.sScroll{flex:1;overflow-y:auto;padding:16px;padding-bottom:calc(16px + var(--sb));-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.sScroll::-webkit-scrollbar{display:none}
+.sCard{background:var(--sf);border:1px solid var(--bdr);border-radius:var(--r);padding:16px;margin-bottom:14px}
+.sCardT{font-family:var(--serif);font-size:17px;font-weight:600;margin-bottom:14px}
+.fg{margin-bottom:14px}
+.fl{display:block;font-size:11px;color:var(--acc);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-weight:500}
+.fi{width:100%;background:var(--sf2);border:1px solid var(--bdr);border-radius:var(--rs);padding:11px 13px;color:var(--cream);font-family:var(--sans);font-size:14px;transition:border-color .15s;-webkit-appearance:none}
+.fi:focus{outline:none;border-color:var(--accd)}
+.fi::placeholder{color:var(--muted)}
+select.fi{cursor:pointer}
+textarea.fi{resize:none;line-height:1.5}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{padding:8px 14px;border-radius:20px;border:1px solid var(--bdr);background:var(--sf2);color:var(--creamd);font-size:13px;cursor:pointer;transition:all .15s;font-family:var(--sans)}
+.chip.sel{background:rgba(125,26,43,.3);border-color:var(--priml);color:var(--cream)}
+#ov{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:200;opacity:0;pointer-events:none;transition:opacity .3s}
+#ov.show{opacity:1;pointer-events:all}
+.sheet{position:fixed;bottom:0;left:0;right:0;background:var(--sf);border-radius:22px 22px 0 0;z-index:300;transform:translateY(100%);transition:transform .38s cubic-bezier(.4,0,.2,1);max-height:92vh;display:flex;flex-direction:column;padding-bottom:var(--sb)}
+.sheet.open{transform:translateY(0)}
+.pull{width:38px;height:4px;background:var(--bdrl);border-radius:2px;margin:10px auto 2px;flex-shrink:0}
+.shHd{padding:8px 18px 10px;flex-shrink:0;display:flex;align-items:center;gap:10px}
+.shT{font-family:var(--serif);font-size:20px;font-weight:600;flex:1}
+.shBody{flex:1;overflow-y:auto;padding:0 18px 16px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.shBody::-webkit-scrollbar{display:none}
+.shFoot{padding:10px 18px;border-top:1px solid var(--bdr);flex-shrink:0;display:flex;gap:9px}
+.wizProg{display:flex;gap:4px;padding:0 18px 10px;flex-shrink:0}
+.wp{flex:1;height:3px;border-radius:2px;background:var(--bdrl);transition:background .3s}
+.wp.done{background:var(--acc)}
+.wp.active{background:var(--priml)}
+.wstep{display:none}
+.wstep.active{display:block}
+.wizPortBox{width:min(240px,100%);aspect-ratio:2/3;background:var(--sf2);border-radius:var(--r);overflow:hidden;position:relative;margin:12px auto}
+.wizPortBox img{width:100%;height:100%;object-fit:cover;display:block}
+.wGenOv{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(8,4,6,.65)}
+.wGenOv.gone{display:none}
+.bigSpin{width:44px;height:44px;border:3px solid rgba(200,164,74,.25);border-top-color:var(--acc);border-radius:50%;animation:spin .85s linear infinite}
+.genHint{font-size:13px;color:var(--creamd);text-align:center;max-width:200px;line-height:1.4}
+.pCat{font-size:10px;font-weight:600;color:var(--acc);text-transform:uppercase;letter-spacing:.12em;padding:12px 0 5px}
+.pOpt{padding:11px 10px;border-bottom:1px solid var(--bdr);cursor:pointer;display:flex;align-items:center;gap:12px;transition:background .12s;border-radius:var(--rs)}
+.pOpt:active{background:var(--sf2)}
+.pOpt.sel{background:rgba(125,26,43,.18)}
+.pOL{flex:1;font-size:14px;color:var(--cream)}
+.pChk{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--bdrl);flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.pOpt.sel .pChk{background:var(--prim);border-color:var(--priml)}
+.pOpt.sel .pChk::after{content:'';width:7px;height:7px;background:#fff;border-radius:50%}
+.ccWrap{flex:1;display:none}
+.ccWrap.show{display:block}
+#portFS{position:fixed;inset:0;background:#000;z-index:500;display:flex;align-items:center;justify-content:center;transform:scale(1.06);opacity:0;pointer-events:none;transition:transform .28s,opacity .28s}
+#portFS.open{transform:scale(1);opacity:1;pointer-events:all}
+#portFS img{max-width:100%;max-height:100%;object-fit:contain}
+.fsClose{position:absolute;top:calc(18px + var(--st));right:18px;width:38px;height:38px;border-radius:50%;background:rgba(0,0,0,.65);border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.fsInfo{position:absolute;bottom:calc(20px + var(--sb));left:20px;right:20px;display:flex;justify-content:space-between;align-items:flex-end}
+.fsSeedL{font-size:11px;color:rgba(255,255,255,.5);font-variant-numeric:tabular-nums}
+.fsDelBtn{padding:7px 14px;border-radius:20px;background:rgba(180,30,50,.4);border:1px solid rgba(180,30,50,.5);color:#fff;font-size:12px;cursor:pointer;font-family:var(--sans)}
+.mWrap{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:400;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .22s}
+.mWrap.open{opacity:1;pointer-events:all}
+.mBox{width:100%;max-width:340px;background:var(--sf2);border:1px solid var(--bdrl);border-radius:var(--r);padding:22px}
+.mBox h3{font-family:var(--serif);font-size:20px;font-weight:600;margin-bottom:14px}
+.mActs{display:flex;gap:9px;margin-top:16px}
+.btn{padding:12px 18px;border-radius:var(--rs);border:1px solid transparent;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;transition:all .15s}
+.btnP{background:var(--prim);color:#fff;border-color:var(--priml);flex:1}
+.btnP:active{background:var(--priml)}
+.btnG{background:transparent;color:var(--creamd);border-color:var(--bdr)}
+.btnG:active{background:var(--sf2)}
+.btnD{background:rgba(192,57,43,.2);color:#e74c3c;border-color:rgba(192,57,43,.4);flex:1}
+.btnA{background:rgba(200,164,74,.15);color:var(--acc);border-color:var(--accd);flex:1}
+.btnFull{width:100%}
+#toast{position:fixed;bottom:calc(88px + var(--sb));left:50%;transform:translateX(-50%) translateY(10px);background:var(--sf3);border:1px solid var(--bdrl);border-radius:22px;padding:10px 22px;font-size:13px;color:var(--cream);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;white-space:nowrap;z-index:600}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.ornament{text-align:center;color:var(--acc);opacity:.4;font-size:18px;letter-spacing:6px;margin:6px 0}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+.shimmer{background:linear-gradient(90deg,var(--sf) 25%,var(--sf2) 50%,var(--sf) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite}
+
+/* ── PIN LOCK ── */
+#pinScreen{
+  position:fixed;inset:0;z-index:1000;
+  background:linear-gradient(160deg,#0d0508 0%,#130b10 50%,#0d0508 100%);
+  display:flex;align-items:center;justify-content:center;
+  transition:opacity .4s,transform .4s;
+}
+#pinScreen.hidden{opacity:0;transform:scale(1.06);pointer-events:none}
+.pinInner{display:flex;flex-direction:column;align-items:center;gap:0;padding:0 24px;width:100%;max-width:320px}
+.pinLogo svg{width:72px;height:72px;border-radius:18px;box-shadow:0 8px 32px rgba(125,26,43,.5)}
+.pinAppName{font-family:var(--serif);font-size:32px;font-weight:600;letter-spacing:.06em;margin-top:14px;color:var(--cream)}
+.pinSubtitle{font-size:13px;color:var(--muted);margin-top:4px;margin-bottom:28px;letter-spacing:.03em;min-height:20px;transition:color .2s}
+.pinSubtitle.err{color:#e05;animation:shake .35s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.pinDots{display:flex;gap:16px;margin-bottom:32px}
+.pinDot{width:13px;height:13px;border-radius:50%;border:2px solid var(--bdrl);background:transparent;transition:background .18s,border-color .18s,transform .18s}
+.pinDot.filled{background:var(--acc);border-color:var(--acc);transform:scale(1.15)}
+.pinDot.err{background:#e05;border-color:#e05}
+.pinPad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%}
+.pinKey{
+  aspect-ratio:1;border-radius:50%;border:1px solid var(--bdrl);
+  background:var(--sf2);color:var(--cream);
+  font-family:var(--serif);font-size:26px;font-weight:600;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:background .12s,transform .1s;-webkit-tap-highlight-color:transparent;
+}
+.pinKey:active{background:var(--sf3);transform:scale(.93)}
+.pinKeyEmpty{background:transparent;border-color:transparent;pointer-events:none}
+.pinKeyDel{background:transparent;border-color:transparent}
+.pinKeyDel svg{width:22px;height:22px;color:var(--creamd)}
+.pinKeyDel:active{background:var(--sf2)}
+
+/* PIN toggle in settings */
+.pinTogRow{display:flex;align-items:center;justify-content:space-between;padding:4px 0}
+.pinTogLabel{font-size:14px;color:var(--cream)}
+.pinTogSub{font-size:12px;color:var(--muted);margin-top:1px}
+.toggle{width:44px;height:26px;border-radius:13px;background:var(--bdr);border:none;cursor:pointer;position:relative;transition:background .25s;flex-shrink:0}
+.toggle.on{background:var(--prim)}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .25s;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.toggle.on::after{transform:translateX(18px)}
+
+</style>
+</head>
+<body>
+
+<div id="app">
+
+<!-- GALLERY -->
+<div class="screen" id="scrGallery">
+  <div class="nav">
+    <div class="navG"><span class="navW">GoGo</span><span class="navT" style="font-size:26px">Gallery</span></div>
+    <button class="iBtn" onclick="showScreen('settings')" aria-label="Settings">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+    </button>
+  </div>
+  <div id="gCont" class="gScroll"></div>
+  <button class="fab" onclick="openWizard()" aria-label="New character">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+  </button>
+</div>
+
+<!-- CHARACTER DETAIL -->
+<div class="screen" id="scrChar">
+  <div class="nav">
+    <button class="iBtn iBtnG" onclick="showScreen('gallery')">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+    </button>
+    <div style="flex:1"></div>
+    <button class="iBtn iBtnG" onclick="openModal('mDelete')">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+    </button>
+  </div>
+  <div class="dScroll">
+    <div class="crslWrap" id="crslWrap">
+      <div class="crsl" id="crsl"></div>
+      <div class="crslGT"></div>
+      <div class="crslGB"><div class="dots" id="dots"></div></div>
+    </div>
+    <div class="dBody" id="dBody"></div>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div class="screen" id="scrSettings">
+  <div class="nav">
+    <button class="iBtn" onclick="showScreen('gallery')">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+    </button>
+    <div class="navG"><span class="navW">Configure</span><span class="navT">Settings</span></div>
+  </div>
+  <div class="sScroll">
+    <div class="sCard">
+      <div class="sCardT">API Keys</div>
+      <div class="fg">
+        <label class="fl">Venice AI Key</label>
+        <input type="password" class="fi" id="sVeniceKey" placeholder="venice-api-key…" autocomplete="off" oninput="saveSettingsNow()">
+      </div>
+      <div class="fg" style="margin-bottom:0">
+        <label class="fl">OpenRouter Key <span style="color:var(--muted);text-transform:none;letter-spacing:0">(optional — smart prompts)</span></label>
+        <input type="password" class="fi" id="sOrKey" placeholder="sk-or-v1-…" autocomplete="off" oninput="saveSettingsNow()">
+      </div>
+    </div>
+    <div class="sCard">
+      <div class="sCardT">Image Model</div>
+      <div class="fg" style="margin-bottom:0">
+        <label class="fl">Venice Model</label>
+        <select class="fi" id="sModel" onchange="saveSettingsNow()">
+          <option value="lustify-sdxl">Lustify SDXL (default)</option>
+          <option value="hidream-i1-fast">HiDream I1 Fast</option>
+          <option value="seedream-3.0">Seedream V5 Lite</option>
+          <option value="seedream-2">Seedream V4</option>
+          <option value="fluently-xl-final">Fluently XL</option>
+          <option value="nai-banana-pro">Nano Banana Pro</option>
+        </select>
+      </div>
+    </div>
+    <div class="sCard">
+      <div class="sCardT">Security</div>
+      <div class="pinTogRow">
+        <div>
+          <div class="pinTogLabel">PIN Lock</div>
+          <div class="pinTogSub" id="pinTogSub">Disabled</div>
+        </div>
+        <button class="toggle" id="pinTogBtn" onclick="togglePin()"></button>
+      </div>
+      <div id="pinChangRow" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--bdr)">
+        <button class="btn btnG btnFull" onclick="startChangePIN()" style="font-size:13px;padding:10px">Change PIN</button>
+      </div>
+    </div>
+    <div class="sCard">
+      <div class="sCardT">About</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <span style="font-family:var(--serif);font-size:16px;font-weight:600;color:var(--cream)">GoGo</span>
+        <span style="font-size:11px;color:var(--acc);background:rgba(200,164,74,.12);border:1px solid rgba(200,164,74,.25);border-radius:20px;padding:3px 10px;letter-spacing:.06em" id="versionBadge">v1.0.0</span>
+      </div>
+      <p style="font-size:13px;color:var(--muted);line-height:1.6">Generates AI character portraits using Venice AI. All data is stored locally — characters in localStorage, portraits in IndexedDB. No external servers beyond the AI APIs you configure.</p>
+      <div class="ornament" style="margin-top:14px">✦ ✦ ✦</div>
+    </div>
+  </div>
+</div>
+
+<!-- OVERLAY -->
+<div id="ov" onclick="closeAllSheets()"></div>
+
+<!-- WIZARD SHEET -->
+<div class="sheet" id="shWiz">
+  <div class="pull"></div>
+  <div class="shHd"><div class="shT" id="wizTitle">New Character</div></div>
+  <div class="wizProg" id="wizProg">
+    <div class="wp active"></div><div class="wp"></div><div class="wp"></div>
+    <div class="wp"></div><div class="wp"></div><div class="wp"></div>
+  </div>
+  <div class="shBody">
+
+    <!-- Step 0: Identity -->
+    <div class="wstep active" id="wstep0">
+      <div class="fg">
+        <label class="fl">Gender</label>
+        <div class="chips" id="wizGenderC">
+          <div class="chip sel" data-val="Female" onclick="selChip(this,'wizGenderC')">Female</div>
+          <div class="chip" data-val="Male" onclick="selChip(this,'wizGenderC')">Male</div>
+          <div class="chip" data-val="Non-binary" onclick="selChip(this,'wizGenderC')">Non-binary</div>
+        </div>
+      </div>
+      <div class="fg"><label class="fl">Name</label><input type="text" class="fi" id="wizName" placeholder="Character name…" autocomplete="off"></div>
+      <div class="fg"><label class="fl">Age</label><input type="number" class="fi" id="wizAge" placeholder="e.g. 24" min="18" max="80"></div>
+      <div class="fg"><label class="fl">Ethnicity</label>
+        <select class="fi" id="wizEthn">
+          <option value="">Select ethnicity…</option>
+          <option>Caucasian / White</option><option>East Asian</option><option>South Asian</option>
+          <option>Southeast Asian</option><option>Black / African</option><option>Hispanic / Latina</option>
+          <option>Middle Eastern</option><option>Mixed / Multiracial</option><option>Other</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Step 1: Build -->
+    <div class="wstep" id="wstep1">
+      <div class="fg"><label class="fl">Height</label>
+        <select class="fi" id="wizHeight">
+          <option value="">Select height…</option>
+          <option>Petite (under 5'2")</option><option>Short (5'2"–5'4")</option>
+          <option>Average (5'5"–5'6")</option><option>Tall (5'7"–5'9")</option><option>Very tall (5'10"+)</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="fl">Body Type</label>
+        <div class="chips" id="wizBodyC">
+          <div class="chip" data-val="slim, slender body" onclick="selChip(this,'wizBodyC')">Slim</div>
+          <div class="chip" data-val="athletic, toned body" onclick="selChip(this,'wizBodyC')">Athletic</div>
+          <div class="chip" data-val="average build" onclick="selChip(this,'wizBodyC')">Average</div>
+          <div class="chip" data-val="curvaceous, voluptuous body" onclick="selChip(this,'wizBodyC')">Curvaceous</div>
+          <div class="chip" data-val="plus-size body, full figured" onclick="selChip(this,'wizBodyC')">Plus-size</div>
+          <div class="chip" data-val="petite compact body" onclick="selChip(this,'wizBodyC')">Petite</div>
+        </div>
+      </div>
+      <div class="fg" id="wizBustGrp">
+        <label class="fl">Breast Size</label>
+        <div class="chips" id="wizBustC">
+          <div class="chip" data-val="flat chest, small breasts, A cup" onclick="selChip(this,'wizBustC')">A / Flat</div>
+          <div class="chip" data-val="small B cup breasts" onclick="selChip(this,'wizBustC')">B cup</div>
+          <div class="chip" data-val="C cup breasts" onclick="selChip(this,'wizBustC')">C cup</div>
+          <div class="chip" data-val="large D cup breasts" onclick="selChip(this,'wizBustC')">D cup</div>
+          <div class="chip" data-val="large DD cup breasts, E cup" onclick="selChip(this,'wizBustC')">DD/E cup</div>
+          <div class="chip" data-val="huge F cup breasts, very large bust" onclick="selChip(this,'wizBustC')">F+ cup</div>
+        </div>
+      </div>
+      <div class="fg"><label class="fl">Additional details <span style="color:var(--muted);text-transform:none">(optional)</span></label>
+        <textarea class="fi" id="wizMeas" rows="3" placeholder="Waist, hips, distinctive features…"></textarea>
+      </div>
+    </div>
+
+    <!-- Step 2: Face -->
+    <div class="wstep" id="wstep2">
+      <div class="fg">
+        <label class="fl">Face Shape</label>
+        <div class="chips" id="wizFaceC">
+          <div class="chip" data-val="oval face shape" onclick="selChip(this,'wizFaceC')">Oval</div>
+          <div class="chip" data-val="round face shape" onclick="selChip(this,'wizFaceC')">Round</div>
+          <div class="chip" data-val="heart-shaped face" onclick="selChip(this,'wizFaceC')">Heart</div>
+          <div class="chip" data-val="square jawline" onclick="selChip(this,'wizFaceC')">Square</div>
+          <div class="chip" data-val="angular face" onclick="selChip(this,'wizFaceC')">Angular</div>
+          <div class="chip" data-val="soft delicate features" onclick="selChip(this,'wizFaceC')">Delicate</div>
+        </div>
+      </div>
+      <div class="fg">
+        <label class="fl">Eye Color</label>
+        <div class="chips" id="wizEyeC">
+          <div class="chip" data-val="brown eyes" onclick="selChip(this,'wizEyeC')">Brown</div>
+          <div class="chip" data-val="blue eyes" onclick="selChip(this,'wizEyeC')">Blue</div>
+          <div class="chip" data-val="green eyes" onclick="selChip(this,'wizEyeC')">Green</div>
+          <div class="chip" data-val="hazel eyes" onclick="selChip(this,'wizEyeC')">Hazel</div>
+          <div class="chip" data-val="grey eyes" onclick="selChip(this,'wizEyeC')">Grey</div>
+          <div class="chip" data-val="dark eyes" onclick="selChip(this,'wizEyeC')">Dark</div>
+        </div>
+      </div>
+      <div class="fg">
+        <label class="fl">Hair Color</label>
+        <div class="chips" id="wizHairColC">
+          <div class="chip" data-val="black hair" onclick="selChip(this,'wizHairColC')">Black</div>
+          <div class="chip" data-val="dark brown hair" onclick="selChip(this,'wizHairColC')">Dark Brown</div>
+          <div class="chip" data-val="light brown hair" onclick="selChip(this,'wizHairColC')">Light Brown</div>
+          <div class="chip" data-val="blonde hair" onclick="selChip(this,'wizHairColC')">Blonde</div>
+          <div class="chip" data-val="red hair" onclick="selChip(this,'wizHairColC')">Red</div>
+          <div class="chip" data-val="auburn hair" onclick="selChip(this,'wizHairColC')">Auburn</div>
+          <div class="chip" data-val="silver hair" onclick="selChip(this,'wizHairColC')">Silver</div>
+        </div>
+      </div>
+      <div class="fg">
+        <label class="fl">Hair Length</label>
+        <div class="chips" id="wizHairLenC">
+          <div class="chip" data-val="pixie cut" onclick="selChip(this,'wizHairLenC')">Pixie</div>
+          <div class="chip" data-val="short hair" onclick="selChip(this,'wizHairLenC')">Short</div>
+          <div class="chip" data-val="shoulder length hair" onclick="selChip(this,'wizHairLenC')">Shoulder</div>
+          <div class="chip" data-val="medium length hair" onclick="selChip(this,'wizHairLenC')">Medium</div>
+          <div class="chip" data-val="long hair" onclick="selChip(this,'wizHairLenC')">Long</div>
+          <div class="chip" data-val="very long hair" onclick="selChip(this,'wizHairLenC')">Very Long</div>
+        </div>
+      </div>
+      <div class="fg">
+        <label class="fl">Hair Style</label>
+        <div class="chips" id="wizHairStC">
+          <div class="chip" data-val="straight hair" onclick="selChip(this,'wizHairStC')">Straight</div>
+          <div class="chip" data-val="wavy hair" onclick="selChip(this,'wizHairStC')">Wavy</div>
+          <div class="chip" data-val="curly hair" onclick="selChip(this,'wizHairStC')">Curly</div>
+          <div class="chip" data-val="braided hair" onclick="selChip(this,'wizHairStC')">Braided</div>
+          <div class="chip" data-val="hair in ponytail" onclick="selChip(this,'wizHairStC')">Ponytail</div>
+          <div class="chip" data-val="hair in bun" onclick="selChip(this,'wizHairStC')">Bun</div>
+        </div>
+      </div>
+      <div class="fg"><label class="fl">Distinctive Features <span style="color:var(--muted);text-transform:none">(optional)</span></label>
+        <textarea class="fi" id="wizFeat" rows="2" placeholder="Freckles, dimples, scar, tattoos…"></textarea>
+      </div>
+    </div>
+
+    <!-- Step 3: Personality -->
+    <div class="wstep" id="wstep3">
+      <div class="fg">
+        <label class="fl">Personality Traits</label>
+        <div class="chips" id="wizTraitsC">
+          <div class="chip" data-val="confident" onclick="togChip(this)">Confident</div>
+          <div class="chip" data-val="mysterious" onclick="togChip(this)">Mysterious</div>
+          <div class="chip" data-val="playful" onclick="togChip(this)">Playful</div>
+          <div class="chip" data-val="intelligent" onclick="togChip(this)">Intelligent</div>
+          <div class="chip" data-val="caring" onclick="togChip(this)">Caring</div>
+          <div class="chip" data-val="fierce" onclick="togChip(this)">Fierce</div>
+          <div class="chip" data-val="gentle" onclick="togChip(this)">Gentle</div>
+          <div class="chip" data-val="dominant" onclick="togChip(this)">Dominant</div>
+          <div class="chip" data-val="submissive" onclick="togChip(this)">Submissive</div>
+          <div class="chip" data-val="witty" onclick="togChip(this)">Witty</div>
+          <div class="chip" data-val="damaged" onclick="togChip(this)">Damaged</div>
+          <div class="chip" data-val="ambitious" onclick="togChip(this)">Ambitious</div>
+        </div>
+      </div>
+      <div class="fg"><label class="fl">Notes <span style="color:var(--muted);text-transform:none">(optional)</span></label>
+        <textarea class="fi" id="wizNotes" rows="3" placeholder="Background, quirks, anything extra…"></textarea>
+      </div>
+    </div>
+
+    <!-- Step 4: Portrait Preview -->
+    <div class="wstep" id="wstep4">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:4px;line-height:1.5">A portrait is generated from your character's details. You can regenerate before saving.</p>
+      <div class="wizPortBox" id="wizPortBox">
+        <div class="wGenOv" id="wGenOv"><div class="bigSpin"></div><p class="genHint" id="wGenHint">Building prompt…</p></div>
+      </div>
+      <button class="btn btnA btnFull" onclick="wizGenPortrait()" id="wizRegenBtn" style="margin-top:8px">↻ Regenerate Portrait</button>
+    </div>
+
+    <!-- Step 5: Confirm -->
+    <div class="wstep" id="wstep5">
+      <div style="text-align:center;margin-bottom:18px">
+        <div class="ornament">✦</div>
+        <p style="font-family:var(--serif);font-size:20px;font-weight:600;margin:8px 0">Almost there</p>
+        <p style="font-size:13px;color:var(--muted);line-height:1.5">Confirm your character's name and save them to your gallery.</p>
+      </div>
+      <div class="fg"><label class="fl">Confirm Name</label><input type="text" class="fi" id="wizConfirm" placeholder="Character name…"></div>
+      <div id="wizSummary"></div>
+    </div>
+
+  </div>
+  <div class="shFoot">
+    <button class="btn btnG" id="wizBack" onclick="wizBack()">Back</button>
+    <button class="btn btnP" id="wizNext" onclick="wizNext()" style="flex:2">Continue</button>
+  </div>
+</div>
+
+<!-- POSE SHEET -->
+<div class="sheet" id="shPose">
+  <div class="pull"></div>
+  <div class="shHd">
+    <div class="shT">Pose</div>
+    <button class="iBtn" onclick="closeSheet('shPose')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>
+  </div>
+  <div class="shBody" id="poseBody"></div>
+</div>
+
+<!-- CLOTHING SHEET -->
+<div class="sheet" id="shCloth">
+  <div class="pull"></div>
+  <div class="shHd">
+    <div class="shT">Clothing</div>
+    <button class="iBtn" onclick="closeSheet('shCloth')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>
+  </div>
+  <div class="shBody" id="clothBody"></div>
+  <div class="shFoot">
+    <div class="ccWrap" id="ccWrap"><input type="text" class="fi" id="ccInp" placeholder="Describe custom clothing…"></div>
+    <button class="btn btnP" onclick="confirmCloth()">Apply</button>
+  </div>
+</div>
+
+<!-- STATE SHEET -->
+<div class="sheet" id="shState">
+  <div class="pull"></div>
+  <div class="shHd">
+    <div class="shT">Expression / State</div>
+    <button class="iBtn" onclick="closeSheet('shState')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>
+  </div>
+  <div class="shBody" id="stateBody"></div>
+</div>
+
+<!-- FULLSCREEN PORTRAIT -->
+<div id="portFS">
+  <img id="fsImg" src="" alt="Portrait">
+  <div class="fsClose" onclick="closeFS()"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:18px;height:18px"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></div>
+  <div class="fsInfo"><span class="fsSeedL" id="fsSeed"></span><button class="fsDelBtn" id="fsDelBtn">Delete portrait</button></div>
+</div>
+
+<!-- PRESET MODAL -->
+<div class="mWrap" id="mPreset">
+  <div class="mBox">
+    <h3>Save Preset</h3>
+    <div class="fg"><label class="fl">Preset Name</label><input type="text" class="fi" id="pNameInp" placeholder="e.g. Bedroom scene…"></div>
+    <div class="mActs">
+      <button class="btn btnG" onclick="closeModal('mPreset')">Cancel</button>
+      <button class="btn btnP" onclick="confirmSavePreset()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE CHARACTER MODAL -->
+<div class="mWrap" id="mDelete">
+  <div class="mBox">
+    <h3>Delete Character?</h3>
+    <p style="font-size:14px;color:var(--muted);line-height:1.5">This will permanently delete this character and all their portraits. This cannot be undone.</p>
+    <div class="mActs">
+      <button class="btn btnG" onclick="closeModal('mDelete')">Cancel</button>
+      <button class="btn btnD" onclick="confirmDelChar()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- PIN LOCK SCREEN -->
+<div id="pinScreen">
+  <div class="pinInner">
+    <div class="pinLogo">
+      <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+        <rect width="80" height="80" rx="16" fill="#0e1a3a"/>
+        <!-- car body -->
+        <rect x="8" y="42" width="64" height="18" rx="4" fill="#c83048"/>
+        <!-- cabin -->
+        <path d="M20 42 L26 26 L54 26 L60 42Z" fill="#a8243a"/>
+        <!-- windows -->
+        <rect x="28" y="29" width="10" height="10" rx="2" fill="#9bd0e8" opacity="0.9"/>
+        <rect x="42" y="29" width="10" height="10" rx="2" fill="#9bd0e8" opacity="0.9"/>
+        <!-- wheels -->
+        <circle cx="24" cy="60" r="8" fill="#181818"/>
+        <circle cx="24" cy="60" r="3.5" fill="#555"/>
+        <circle cx="56" cy="60" r="8" fill="#181818"/>
+        <circle cx="56" cy="60" r="3.5" fill="#555"/>
+        <!-- headlights -->
+        <rect x="9" y="47" width="8" height="5" rx="1.5" fill="#f0d080" opacity="0.9"/>
+        <rect x="63" y="47" width="8" height="5" rx="1.5" fill="#f0d080" opacity="0.9"/>
+      </svg>
+    </div>
+    <div class="pinAppName">GoGo</div>
+    <div class="pinSubtitle" id="pinSubtitle">Enter PIN</div>
+    <div class="pinDots" id="pinDots">
+      <div class="pinDot" id="pd0"></div>
+      <div class="pinDot" id="pd1"></div>
+      <div class="pinDot" id="pd2"></div>
+      <div class="pinDot" id="pd3"></div>
+    </div>
+    <div class="pinPad">
+      <button class="pinKey" onclick="pinPress('1')">1</button>
+      <button class="pinKey" onclick="pinPress('2')">2</button>
+      <button class="pinKey" onclick="pinPress('3')">3</button>
+      <button class="pinKey" onclick="pinPress('4')">4</button>
+      <button class="pinKey" onclick="pinPress('5')">5</button>
+      <button class="pinKey" onclick="pinPress('6')">6</button>
+      <button class="pinKey" onclick="pinPress('7')">7</button>
+      <button class="pinKey" onclick="pinPress('8')">8</button>
+      <button class="pinKey" onclick="pinPress('9')">9</button>
+      <button class="pinKey pinKeyEmpty" disabled></button>
+      <button class="pinKey" onclick="pinPress('0')">0</button>
+      <button class="pinKey pinKeyDel" onclick="pinDel()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6H19a1 1 0 011 1v10a1 1 0 01-1 1H12l-7-7 7-7z"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- PIN SETUP MODAL -->
+<div class="mWrap" id="mPinSetup">
+  <div class="mBox">
+    <h3 id="pinSetupTitle">Set PIN Lock</h3>
+    <p style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:14px" id="pinSetupDesc">Choose a 4-digit PIN to protect GoGo.</p>
+    <div class="pinDots" style="justify-content:center;margin-bottom:14px" id="pinSetupDots">
+      <div class="pinDot" id="spd0"></div>
+      <div class="pinDot" id="spd1"></div>
+      <div class="pinDot" id="spd2"></div>
+      <div class="pinDot" id="spd3"></div>
+    </div>
+    <div class="pinPad" style="max-width:240px;margin:0 auto">
+      <button class="pinKey" onclick="pinSetupPress('1')">1</button>
+      <button class="pinKey" onclick="pinSetupPress('2')">2</button>
+      <button class="pinKey" onclick="pinSetupPress('3')">3</button>
+      <button class="pinKey" onclick="pinSetupPress('4')">4</button>
+      <button class="pinKey" onclick="pinSetupPress('5')">5</button>
+      <button class="pinKey" onclick="pinSetupPress('6')">6</button>
+      <button class="pinKey" onclick="pinSetupPress('7')">7</button>
+      <button class="pinKey" onclick="pinSetupPress('8')">8</button>
+      <button class="pinKey" onclick="pinSetupPress('9')">9</button>
+      <button class="pinKey pinKeyEmpty" disabled></button>
+      <button class="pinKey" onclick="pinSetupPress('0')">0</button>
+      <button class="pinKey pinKeyDel" onclick="pinSetupDel()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6H19a1 1 0 011 1v10a1 1 0 01-1 1H12l-7-7 7-7z"/></svg>
+      </button>
+    </div>
+    <div class="mActs" style="margin-top:14px">
+      <button class="btn btnG" onclick="cancelPinSetup()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+const VERSION = '1.0.0';
+
+// ── PIN LOCK ──
+let pinEntry = '';
+let pinSetupEntry = '';
+let pinSetupStage = 0; // 0=enter new, 1=confirm
+let pinSetupFirst = '';
+
+function getPIN(){ return localStorage.getItem('gogo_pin') || '' }
+function setPIN(p){ localStorage.setItem('gogo_pin', p) }
+function isPINEnabled(){ return !!getPIN() }
+
+function pinUpdateDots(entry, prefix){
+  for(let i=0;i<4;i++){
+    const d = document.getElementById((prefix||'p')+'d'+i);
+    if(!d) continue;
+    d.classList.toggle('filled', i < entry.length);
+    d.classList.remove('err');
+  }
+}
+
+function pinPress(digit){
+  if(pinEntry.length >= 4) return;
+  pinEntry += digit;
+  pinUpdateDots(pinEntry, 'p');
+  if(pinEntry.length === 4) setTimeout(pinSubmit, 120);
+}
+
+function pinDel(){
+  pinEntry = pinEntry.slice(0,-1);
+  pinUpdateDots(pinEntry, 'p');
+}
+
+function pinSubmit(){
+  const stored = getPIN();
+  if(pinEntry === stored){
+    // Success
+    $('pinScreen').classList.add('hidden');
+  } else {
+    // Wrong PIN
+    const sub = $('pinSubtitle');
+    sub.textContent = 'Incorrect PIN';
+    sub.classList.add('err');
+    for(let i=0;i<4;i++){ const d=$('pd'+i); if(d){d.classList.add('err');d.classList.remove('filled')} }
+    setTimeout(()=>{
+      sub.classList.remove('err');
+      sub.textContent = 'Enter PIN';
+      for(let i=0;i<4;i++){ const d=$('pd'+i); if(d) d.classList.remove('err') }
+    }, 800);
+    pinEntry = '';
+  }
+}
+
+function showPinScreen(){
+  const ps = $('pinScreen');
+  ps.classList.remove('hidden');
+  pinEntry = '';
+  pinUpdateDots('', 'p');
+  $('pinSubtitle').textContent = 'Enter PIN';
+  $('pinSubtitle').classList.remove('err');
+}
+
+// Lock on visibility change
+document.addEventListener('visibilitychange', ()=>{
+  if(document.hidden) return;
+  if(isPINEnabled()) showPinScreen();
+});
+
+// ── PIN SETUP (in settings) ──
+function togglePin(){
+  if(isPINEnabled()){
+    // Disable PIN — confirm with current PIN first via setup modal
+    pinSetupStage = 99; // special: disable mode
+    pinSetupEntry = '';
+    pinUpdateDots('','sp');
+    $('pinSetupTitle').textContent = 'Confirm Current PIN';
+    $('pinSetupDesc').textContent = 'Enter your current PIN to disable the lock.';
+    openModal('mPinSetup');
+  } else {
+    // Enable — set new PIN
+    pinSetupStage = 0;
+    pinSetupEntry = '';
+    pinSetupFirst = '';
+    pinUpdateDots('','sp');
+    $('pinSetupTitle').textContent = 'Set PIN Lock';
+    $('pinSetupDesc').textContent = 'Choose a 4-digit PIN to protect GoGo.';
+    openModal('mPinSetup');
+  }
+}
+
+function startChangePIN(){
+  pinSetupStage = 0;
+  pinSetupEntry = '';
+  pinSetupFirst = '';
+  pinUpdateDots('','sp');
+  $('pinSetupTitle').textContent = 'Change PIN';
+  $('pinSetupDesc').textContent = 'Choose a new 4-digit PIN.';
+  openModal('mPinSetup');
+}
+
+function pinSetupPress(digit){
+  if(pinSetupEntry.length >= 4) return;
+  pinSetupEntry += digit;
+  pinUpdateDots(pinSetupEntry,'sp');
+  if(pinSetupEntry.length === 4) setTimeout(pinSetupSubmit, 120);
+}
+
+function pinSetupDel(){
+  pinSetupEntry = pinSetupEntry.slice(0,-1);
+  pinUpdateDots(pinSetupEntry,'sp');
+}
+
+function pinSetupSubmit(){
+  // Disable mode
+  if(pinSetupStage === 99){
+    if(pinSetupEntry === getPIN()){
+      setPIN('');
+      closeModal('mPinSetup');
+      syncPinSettings();
+      toast('PIN lock disabled');
+    } else {
+      pinSetupFlash('Incorrect PIN');
+    }
+    return;
+  }
+  // Stage 0: enter new PIN
+  if(pinSetupStage === 0){
+    pinSetupFirst = pinSetupEntry;
+    pinSetupEntry = '';
+    pinSetupStage = 1;
+    pinUpdateDots('','sp');
+    $('pinSetupTitle').textContent = 'Confirm PIN';
+    $('pinSetupDesc').textContent = 'Enter the same PIN again to confirm.';
+    return;
+  }
+  // Stage 1: confirm
+  if(pinSetupEntry === pinSetupFirst){
+    setPIN(pinSetupEntry);
+    closeModal('mPinSetup');
+    syncPinSettings();
+    toast('PIN lock enabled ✦');
+  } else {
+    pinSetupFlash('PINs don\'t match — try again');
+    pinSetupStage = 0;
+    pinSetupFirst = '';
+  }
+}
+
+function pinSetupFlash(msg){
+  $('pinSetupDesc').style.color = '#e05';
+  $('pinSetupDesc').textContent = msg;
+  for(let i=0;i<4;i++){ const d=$('spd'+i); if(d){d.classList.add('err');d.classList.remove('filled')} }
+  setTimeout(()=>{
+    $('pinSetupDesc').style.color = '';
+    $('pinSetupDesc').textContent = pinSetupStage===0?'Choose a 4-digit PIN.':'Enter the same PIN again.';
+    for(let i=0;i<4;i++){ const d=$('spd'+i); if(d) d.classList.remove('err') }
+    pinSetupEntry = '';
+    pinUpdateDots('','sp');
+  }, 900);
+}
+
+function cancelPinSetup(){
+  closeModal('mPinSetup');
+  pinSetupEntry = '';
+  pinSetupFirst = '';
+  pinSetupStage = 0;
+}
+
+function syncPinSettings(){
+  const on = isPINEnabled();
+  const btn = $('pinTogBtn');
+  const sub = $('pinTogSub');
+  const chg = $('pinChangRow');
+  if(btn) btn.classList.toggle('on', on);
+  if(sub) sub.textContent = on ? 'Enabled — 4-digit PIN' : 'Disabled';
+  if(chg) chg.style.display = on ? '' : 'none';
+}
+
+// CONSTANTS
+const POSES = {
+  'Studio': [
+    { label: 'Standing — neutral', prompt: 'standing, arms relaxed at sides, neutral pose' },
+    { label: 'Standing — hands on hips', prompt: 'standing, hands on hips, confident pose' },
+    { label: 'Sitting — upright', prompt: 'sitting, upright posture, direct gaze' },
+    { label: 'Sitting — legs crossed', prompt: 'sitting, legs elegantly crossed' },
+    { label: 'Kneeling', prompt: 'kneeling, straight back' },
+    { label: 'Lying — on back', prompt: 'lying on back, arms above head' },
+    { label: 'Lying — on stomach', prompt: 'lying on stomach, propped on elbows' },
+    { label: 'Leaning against wall', prompt: 'leaning against wall, casual relaxed pose' },
+  ],
+  'Location': [
+    { label: 'On bed — sitting', prompt: 'sitting on bed, rumpled sheets, bedroom' },
+    { label: 'On bed — lying', prompt: 'lying on bed, bedroom setting, soft sheets' },
+    { label: 'In bath', prompt: 'in bathtub, bubbles, bathroom setting' },
+    { label: 'In shower', prompt: 'in shower, wet skin, water droplets, steam' },
+    { label: 'On sofa', prompt: 'lounging on sofa, living room background' },
+    { label: 'Outdoors — nature', prompt: 'outdoors, natural greenery, soft sunlight' },
+    { label: 'Outdoors — beach', prompt: 'on sandy beach, ocean background, golden light' },
+    { label: 'At mirror', prompt: 'standing at mirror, seeing reflection' },
+  ],
+  'Intimate': [
+    { label: 'Close portrait', prompt: 'close-up portrait, intimate framing, soft bokeh' },
+    { label: 'Arched back', prompt: 'arched back, head thrown back, sensual display' },
+    { label: 'Hands tracing body', prompt: 'hands tracing own curves, self-touching, sensual' },
+    { label: 'Seductive side-lying', prompt: 'lying on side, one knee raised, seductive look' },
+    { label: 'Pinned against wall', prompt: 'pressed against wall, breathless expression' },
+    { label: 'Presenting', prompt: 'presenting self to camera, fully displayed, exhibitionist' },
+  ],
+  'Explicit Solo': [
+    { label: 'Spread — presenting', prompt: 'legs wide spread, pussy on display, explicit presentation' },
+    { label: 'Fingering self', prompt: 'fingers inside vagina, masturbating' },
+    { label: 'Rubbing clit', prompt: 'rubbing clitoris, fingers on wet pussy, pleasuring self' },
+    { label: 'Using dildo', prompt: 'dildo inserted in pussy, fucking self with toy' },
+    { label: 'Bent over presenting', prompt: 'bent over, ass up face down, ass and pussy presented' },
+    { label: 'Using vibrator', prompt: 'vibrator pressed against pussy, masturbating with toy' },
+    { label: 'Anal toy', prompt: 'butt plug inserted, anal toy, ass play' },
+  ],
+  'Sex Acts': [
+    { label: 'Blowjob', prompt: 'blowjob, cock in mouth, sucking penis, oral sex' },
+    { label: 'Deepthroat', prompt: 'deepthroat, cock buried in throat, gagging' },
+    { label: 'Titjob / Paizuri', prompt: 'titjob, penis between breasts, paizuri, looking up' },
+    { label: 'Handjob', prompt: 'handjob, hand wrapped around erect cock, stroking' },
+    { label: 'Facial cumshot', prompt: 'facial, cum covering face, cumshot, ahegao' },
+    { label: 'Cum on chest', prompt: 'cumshot on breasts, cum dripping down tits' },
+    { label: 'Creampie', prompt: 'creampie, cum dripping from pussy, internal cumshot' },
+    { label: 'Swallowing', prompt: 'open mouth, tongue out, cum in mouth, swallowing' },
+  ],
+  'Explicit Scene': [
+    { label: 'Cowgirl', prompt: 'cowgirl position, riding cock, bouncing on penis' },
+    { label: 'Reverse cowgirl', prompt: 'reverse cowgirl, facing away while riding' },
+    { label: 'Doggy style', prompt: 'doggy style, fucking from behind, cock in pussy' },
+    { label: 'Missionary', prompt: 'missionary position, legs raised and spread, penetrated' },
+    { label: 'Against wall', prompt: 'fucked standing against wall, legs wrapped around' },
+    { label: 'On knees giving BJ', prompt: 'kneeling before cock, giving blowjob, servicing' },
+    { label: 'Anal', prompt: 'anal sex, cock in ass, ass penetration' },
+    { label: 'Prone bone', prompt: 'prone bone, lying flat face-down, penetrated from behind' },
+    { label: 'Spitroast', prompt: 'spitroast, cock in mouth and cock in pussy simultaneously' },
+  ],
+  'Taboo': [
+    { label: 'Teacher scenario', prompt: 'teacher outfit, glasses, classroom, authority figure, taboo' },
+    { label: 'Domestic taboo', prompt: 'home setting, domestic, forbidden family dynamic, taboo' },
+    { label: 'Boss / Secretary', prompt: 'office setting, power dynamic, boss and employee taboo' },
+    { label: 'Nurse fantasy', prompt: 'nurse uniform, white medical outfit, hospital, taboo' },
+    { label: 'French maid', prompt: 'french maid outfit, short skirt, white apron, domestic service' },
+    { label: 'Neighbor fantasy', prompt: 'suburban setting, next-door neighbor, forbidden, taboo' },
+    { label: 'Stepfamily', prompt: 'domestic home, forbidden family dynamic, taboo stepfamily scenario' },
+  ],
+};
+
+const CLOTHING = {
+  'None / Bare': [
+    { label: 'Nude', prompt: 'completely nude, naked, no clothing whatsoever' },
+    { label: 'Topless', prompt: 'topless, bare breasts exposed' },
+    { label: 'Just panties', prompt: 'wearing only panties, topless, underwear only' },
+    { label: 'Just thong', prompt: 'wearing only tiny thong, topless, barely covered' },
+    { label: 'Micro bikini', prompt: 'micro bikini, string bikini, barely covering' },
+  ],
+  'Lingerie': [
+    { label: 'Matching set', prompt: 'matching lingerie set, delicate bra and panties' },
+    { label: 'Corset', prompt: 'corset, waist cinched, elegant lingerie' },
+    { label: 'Sheer babydoll', prompt: 'sheer babydoll nightgown, see-through lingerie' },
+    { label: 'Stockings & garter', prompt: 'silk stockings, garter belt, suspenders, lingerie' },
+    { label: 'Sheer bodysuit', prompt: 'sheer lace bodysuit, see-through, lingerie' },
+    { label: 'Silk slip', prompt: 'silk slip dress, thin straps, elegant lingerie' },
+  ],
+  'Casual': [
+    { label: 'T-shirt & jeans', prompt: 'casual fitted t-shirt and jeans, everyday outfit' },
+    { label: 'Summer dress', prompt: 'light flowy summer dress, casual' },
+    { label: 'Crop top & shorts', prompt: 'crop top and short shorts, casual summer' },
+    { label: 'Oversized shirt', prompt: 'oversized shirt, no pants, casual relaxed' },
+    { label: 'Athletic wear', prompt: 'sports bra and form-fitting leggings, athletic wear' },
+    { label: 'Sundress', prompt: 'floral sundress, delicate, feminine casual' },
+  ],
+  'Smart / Formal': [
+    { label: 'Little black dress', prompt: 'little black dress, form-fitting, elegant LBD' },
+    { label: 'Evening gown', prompt: 'floor-length evening gown, formal, sophisticated' },
+    { label: 'Business suit', prompt: 'tailored business suit, professional, power dressing' },
+    { label: 'Blouse & skirt', prompt: 'silk blouse and pencil skirt, smart professional' },
+    { label: 'Cocktail dress', prompt: 'cocktail dress, semi-formal, stylish' },
+  ],
+  'Custom': [
+    { label: 'Custom clothing...', prompt: '', isCustom: true },
+  ],
+};
+
+const STATES_F = [
+  { label: 'Neutral', prompt: 'neutral expression, composed' },
+  { label: 'Relaxed', prompt: 'relaxed serene expression, soft smile' },
+  { label: 'Seductive', prompt: 'seductive expression, bedroom eyes, sultry look, parted lips' },
+  { label: 'Aroused', prompt: 'visibly aroused, heavy-lidded eyes, flushed cheeks, lips parted' },
+  { label: 'Desperate', prompt: 'desperate needy expression, yearning, begging eyes' },
+  { label: 'Submissive', prompt: 'submissive expression, looking up pleadingly, eager to please' },
+  { label: 'Dominant', prompt: 'dominant confident expression, commanding, in control' },
+  { label: 'Teasing', prompt: 'teasing playful expression, mischievous smile, coy' },
+  { label: 'Post-orgasm', prompt: 'post-orgasm afterglow, flushed, satisfied, blissful' },
+  { label: 'Shy / Blushing', prompt: 'shy expression, cheeks flushed pink, looking away' },
+  { label: 'Ahegao', prompt: 'ahegao expression, eyes rolling back, tongue out, overwhelmed' },
+  { label: 'Crying / Tears', prompt: 'tears streaming down cheeks, emotional, tear-stained' },
+];
+
+const STATES_M = [
+  { label: 'Neutral', prompt: 'neutral expression, composed' },
+  { label: 'Dominant', prompt: 'dominant intense expression, commanding, powerful' },
+  { label: 'Intense', prompt: 'intense focused expression, dark brooding gaze' },
+  { label: 'Gentle', prompt: 'gentle warm expression, caring, tender look' },
+  { label: 'Possessive', prompt: 'possessive expression, protective, claiming' },
+  { label: 'Aroused', prompt: 'aroused expression, heated gaze, jaw tense' },
+  { label: 'Smirking', prompt: 'confident smirk, knowing look, self-assured' },
+  { label: 'Submissive', prompt: 'submissive expression, yielding, pliant' },
+];
+
+const NEG = '(worst quality, low quality:1.4), (deformed, distorted:1.3), bad anatomy, extra limbs, mutated hands, blurry, ugly, watermark, text, signature, jpeg artifacts';
+
+const MODELS = [
+  { id: 'lustify-sdxl', label: 'Lustify SDXL (default)' },
+  { id: 'hidream-i1-fast', label: 'HiDream I1 Fast' },
+  { id: 'seedream-3.0', label: 'Seedream V5 Lite' },
+  { id: 'seedream-2', label: 'Seedream V4' },
+  { id: 'fluently-xl-final', label: 'Fluently XL' },
+  { id: 'nai-banana-pro', label: 'Nano Banana Pro' },
+];
+
+// ── IndexedDB ──
+class PDB {
+  constructor(){this.db=null;this.ready=this._init()}
+  _init(){return new Promise((res,rej)=>{
+    const r=indexedDB.open('PortraitStudioDB',1);
+    r.onupgradeneeded=e=>{
+      const db=e.target.result;
+      if(!db.objectStoreNames.contains('portraits')){
+        const s=db.createObjectStore('portraits',{keyPath:'id',autoIncrement:true});
+        s.createIndex('cid','characterId',{unique:false});
+      }
+    };
+    r.onsuccess=e=>{this.db=e.target.result;res()};
+    r.onerror=rej;
+  })}
+  async add(d){await this.ready;return new Promise((res,rej)=>{
+    const tx=this.db.transaction('portraits','readwrite');
+    const r=tx.objectStore('portraits').add(d);
+    r.onsuccess=()=>res(r.result);r.onerror=rej;
+  })}
+  async forChar(cid){await this.ready;return new Promise((res,rej)=>{
+    const tx=this.db.transaction('portraits','readonly');
+    const r=tx.objectStore('portraits').index('cid').getAll(cid);
+    r.onsuccess=()=>res(r.result.sort((a,b)=>b.createdAt-a.createdAt));
+    r.onerror=rej;
+  })}
+  async get(id){await this.ready;return new Promise((res,rej)=>{
+    const tx=this.db.transaction('portraits','readonly');
+    const r=tx.objectStore('portraits').get(id);
+    r.onsuccess=()=>res(r.result);r.onerror=rej;
+  })}
+  async del(id){await this.ready;return new Promise((res,rej)=>{
+    const tx=this.db.transaction('portraits','readwrite');
+    const r=tx.objectStore('portraits').delete(id);
+    r.onsuccess=res;r.onerror=rej;
+  })}
+  async delForChar(cid){const ps=await this.forChar(cid);for(const p of ps)await this.del(p.id)}
+  async latest(cid){const ps=await this.forChar(cid);return ps.length?ps[0]:null}
+}
+
+// ── LocalStorage ──
+const LS={
+  get(k,d=null){try{const v=localStorage.getItem(k);return v!==null?JSON.parse(v):d}catch{return d}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
+};
+const getChars=()=>LS.get('ps_chars',[]);
+const saveChars=c=>LS.set('ps_chars',c);
+const getSettings=()=>LS.get('ps_settings',{veniceKey:'',orKey:'',model:'lustify-sdxl'});
+const getPresets=()=>LS.get('ps_presets',[]);
+const savePresets=p=>LS.set('ps_presets',p);
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const esc=s=>s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'):'';
+const imgSrc=b64=>b64.startsWith('/9j/')?`data:image/jpeg;base64,${b64}`:`data:image/png;base64,${b64}`;
+
+// ── App State ──
+const DB=new PDB();
+let curScreen='gallery',curCharId=null,curPortraits=[],curCarIdx=0;
+let activePose=null,activeClothing=null,activeState=null;
+let activeToggles={sheer:false,hardNipples:false,erect:false,holding:false};
+let seedVal='',seedLocked=false;
+let curFsId=null,wizStep=0,wizPortrait=null;
+
+// ── Navigation ──
+function showScreen(name){
+  if(name===curScreen)return;
+  const from=$('scr-'+curScreen),to=$('scr-'+name);
+  const back=name==='gallery';
+  if(back){
+    from.classList.add('right');
+    to.classList.remove('left');
+  } else {
+    to.style.transition='none';to.classList.remove('right');
+    raf(()=>{to.style.transition='';to.classList.remove('right');from.classList.add('left')});
+  }
+  setTimeout(()=>{from.classList.remove('left','right');if(back)to.classList.remove('left')},320);
+  curScreen=name;
+  if(name==='gallery')renderGallery();
+  if(name==='settings')syncSettings();
+  if(name==='character'){}
+}
+const $=id=>document.getElementById(id);
+const raf=fn=>requestAnimationFrame(fn);
+
+// ── Toast ──
+let toastTimer=0;
+function toast(msg,dur=2600){
+  const el=$('toast');el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),dur);
+}
+
+// ── Sheets ──
+function openSheet(id){$(id).classList.add('open');$('ov').classList.add('show')}
+function closeSheet(id){
+  $(id).classList.remove('open');
+  if(!document.querySelector('.sheet.open'))$('ov').classList.remove('show');
+}
+function closeAllSheets(){
+  document.querySelectorAll('.sheet.open').forEach(s=>s.classList.remove('open'));
+  $('ov').classList.remove('show');
+  closeModal('mPreset');closeModal('mDelete');
+}
+function openModal(id){$(id).classList.add('open')}
+function closeModal(id){$(id).classList.remove('open')}
+
+// ── Gallery ──
+async function renderGallery(){
+  const chars=getChars(),el=$('gCont');
+  if(!chars.length){
+    el.innerHTML=`<div class="empty"><div class="empty-icon">✦</div><h2>No characters yet</h2><p>Tap + to create your first character with AI-generated portraits</p></div>`;
+    return;
+  }
+  el.innerHTML=`<div class="gGrid">${chars.map(c=>`
+    <div class="card" onclick="openChar('${c.id}')" id="cd-${c.id}">
+      <div class="card-ph shimmer"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span>Loading...</span></div>
+      <div class="card-ov"><div class="card-name">${esc(c.name)}</div><div class="card-role">${[c.age?c.age+' yrs':'',c.ethnicity,c.gender].filter(Boolean).join(' · ')}</div></div>
+    </div>`).join('')}</div>`;
+  for(const c of chars){
+    const p=await DB.latest(c.id),cnt=(await DB.forChar(c.id)).length;
+    const card=$('cd-'+c.id);if(!card)continue;
+    const ph=card.querySelector('.card-ph');
+    if(p&&ph){const img=document.createElement('img');img.className='card-img';img.src=imgSrc(p.imageData);img.alt=c.name;ph.replaceWith(img)}
+    else if(ph){ph.classList.remove('shimmer')}
+    if(cnt>1){const badge=document.createElement('div');badge.className='cnt-badge';badge.innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:11px;height:11px"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>${cnt}`;card.appendChild(badge)}
+  }
+}
+
+// ── Character Detail ──
+async function openChar(id){
+  curCharId=id;
+  activePose=null;activeClothing=null;activeState=null;
+  activeToggles={sheer:false,hardNipples:false,erect:false,holding:false};
+  if(!seedLocked)seedVal='';
+  curPortraits=await DB.forChar(id);curCarIdx=0;
+  const char=getChars().find(c=>c.id===id);if(!char)return;
+  showScreen('character');
+  renderCarousel(char);
+  renderDetail(char);
+}
+
+function renderCarousel(char){
+  const crsl=$('crsl'),dots=$('dots');
+  if(!curPortraits.length){
+    crsl.innerHTML=`<div class="crslSlide"><div class="crslPh"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><p>No portraits yet — generate one below</p></div></div>`;
+    dots.innerHTML='';return;
+  }
+  crsl.innerHTML=curPortraits.map((p,i)=>`<div class="crslSlide" onclick="openFS(${p.id})"><img src="${imgSrc(p.imageData)}" loading="lazy" alt="Portrait ${i+1}"></div>`).join('');
+  dots.innerHTML=curPortraits.map((_,i)=>`<div class="dot${i===0?' on':''}"></div>`).join('');
+  crsl.onscroll=null;
+  crsl.addEventListener('scroll',()=>{
+    const i=Math.round(crsl.scrollLeft/window.innerWidth);
+    if(i!==curCarIdx){curCarIdx=i;document.querySelectorAll('#dots .dot').forEach((d,j)=>d.classList.toggle('on',j===i))}
+  },{passive:true});
+}
+
+function renderDetail(char){
+  const body=$('dBody');
+  const fem=char.gender==='Female'||char.gender==='Non-binary';
+  const build=[char.build?.bodyType,fem?char.build?.breastSize:null,char.build?.height].filter(Boolean).join(', ');
+  const face=[char.face?.hairColor,char.face?.hairLength,char.face?.eyeColor?char.face.eyeColor+' eyes':null].filter(Boolean).join(', ');
+  const togsHtml=fem?`
+    <div class="togs">
+      <button class="tog${activeToggles.sheer?' on':''}" onclick="togOpt('sheer',this)">Sheer</button>
+      <button class="tog${activeToggles.hardNipples?' on':''}" onclick="togOpt('hardNipples',this)">Hard nipples</button>
+    </div>`:`
+    <div class="togs">
+      <button class="tog${activeToggles.erect?' on':''}" onclick="togOpt('erect',this)">Erect</button>
+      <button class="tog${activeToggles.holding?' on':''}" onclick="togOpt('holding',this)">Holding</button>
+    </div>`;
+  body.innerHTML=`
+    <div class="dNR"><div class="dName">${esc(char.name)}</div></div>
+    <div class="dMeta">${[char.age?char.age+' yrs':'',char.ethnicity,char.gender].filter(Boolean).join(' · ')}</div>
+    <div class="infoCard">
+      ${build?`<div class="infoRow"><span class="iKey">Build</span><span class="iVal">${esc(build)}</span></div>`:''}
+      ${face?`<div class="infoRow"><span class="iKey">Look</span><span class="iVal">${esc(face)}</span></div>`:''}
+      ${char.personality?.traits?.length?`<div class="infoRow"><span class="iKey">Traits</span><span class="iVal">${esc(char.personality.traits.join(', '))}</span></div>`:''}
+      ${char.personality?.notes?`<div class="infoRow"><span class="iKey">Notes</span><span class="iVal">${esc(char.personality.notes)}</span></div>`:''}
+    </div>
+    <div class="sHead">Generate Portrait</div>
+    <div class="pickerRow">
+      <button class="pickerBtn" onclick="openPose()"><div><span class="pbLbl">Pose</span><span class="pbVal" id="pvPose">${activePose?esc(activePose.label):'Choose pose...'}</span></div><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button>
+    </div>
+    <div class="pickerRow">
+      <button class="pickerBtn" onclick="openClothing()"><div><span class="pbLbl">Clothing</span><span class="pbVal" id="pvCloth">${activeClothing?esc(activeClothing.label):'Choose clothing...'}</span></div><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button>
+      <button class="pickerBtn" onclick="openState()" style="flex:0.75"><div><span class="pbLbl">State</span><span class="pbVal" id="pvState">${activeState?esc(activeState.label):'Any'}</span></div><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button>
+    </div>
+    ${togsHtml}
+    <div class="seedWrap${seedLocked?' seedLocked':''}" id="seedWrap">
+      <input type="number" class="seedInp" id="seedInp" placeholder="Seed (random)" value="${seedVal}" oninput="seedVal=this.value">
+      <button class="seedBtn${seedLocked?' locked':''}" id="seedLockBtn" onclick="togSeedLock()">${seedLocked?'🔒 Locked':'🔓 Lock'}</button>
+      <button class="seedBtn" onclick="clearSeed()">Clear</button>
+    </div>
+    <div class="sHead">Presets</div>
+    <div class="presetScroll" id="presetScroll">${renderPresets()}</div>
+    <div class="promptSt" id="promptSt"></div>
+    <button class="genBtn" id="genBtn" onclick="genPortrait()">
+      <span class="genBtnTxt">✦ Generate Portrait</span>
+      <div class="genBtnLoad"><div class="spinRing"></div><span style="font-family:var(--serif);font-size:15px">Generating...</span></div>
+    </button>
+    <div class="dangerRow"><button class="btn btnDanger" onclick="openModal('mDelete')">Delete Character</button></div>`;
+}
+
+// ── Pickers ──
+function openPose(){
+  let h='';
+  for(const[cat,poses]of Object.entries(POSES)){
+    h+=`<div class="pCat">${cat}</div>`;
+    poses.forEach((p,i)=>{
+      const sel=activePose&&activePose.label===p.label;
+      h+=`<div class="pOpt${sel?' sel':''}" onclick="selPose(${JSON.stringify(cat)},${i})"><div class="pOL">${p.label}</div><div class="pChk"></div></div>`;
+    });
+  }
+  $('poseBody').innerHTML=h;openSheet('shPose');
+}
+function selPose(cat,i){activePose=POSES[cat][i];closeSheet('shPose');const e=$('pvPose');if(e)e.textContent=activePose.label}
+
+function openClothing(){
+  let h='';
+  for(const[cat,items]of Object.entries(CLOTHING)){
+    h+=`<div class="pCat">${cat}</div>`;
+    items.forEach((item,i)=>{
+      const sel=activeClothing&&activeClothing.label===item.label;
+      h+=`<div class="pOpt${sel?' sel':''}" onclick="selCloth(${JSON.stringify(cat)},${i})"><div class="pOL">${item.label}</div><div class="pChk"></div></div>`;
+    });
+  }
+  $('clothBody').innerHTML=h;
+  $('ccWrap').classList.remove('show');
+  openSheet('shCloth');
+}
+function selCloth(cat,i){
+  const item=CLOTHING[cat][i];
+  if(item.isCustom){$('ccWrap').classList.add('show');document.querySelectorAll('#clothBody .pOpt').forEach(e=>e.classList.remove('sel'));event.currentTarget.classList.add('sel');return}
+  activeClothing={label:item.label,prompt:item.prompt};$('ccWrap').classList.remove('show');
+  const e=$('pvCloth');if(e)e.textContent=activeClothing.label;closeSheet('shCloth');
+}
+function confirmCloth(){
+  const v=$('ccInp').value.trim();
+  if(v){activeClothing={label:'Custom',prompt:v,isCustom:true};const e=$('pvCloth');if(e)e.textContent='Custom'}
+  closeSheet('shCloth');
+}
+
+function openState(){
+  const char=getChars().find(c=>c.id===curCharId);
+  const fem=!char||char.gender==='Female'||char.gender==='Non-binary';
+  const list=fem?STATES_F:STATES_M;
+  $('stateBody').innerHTML=list.map(s=>{
+    const sel=activeState&&activeState.label===s.label;
+    return `<div class="pOpt${sel?' sel':''}" onclick="selState(${JSON.stringify(s.label)})"><div class="pOL">${s.label}</div><div class="pChk"></div></div>`;
+  }).join('');
+  openSheet('shState');
+}
+function selState(label){
+  const char=getChars().find(c=>c.id===curCharId);
+  const fem=!char||char.gender==='Female'||char.gender==='Non-binary';
+  activeState=(fem?STATES_F:STATES_M).find(s=>s.label===label);
+  const e=$('pvState');if(e)e.textContent=label;closeSheet('shState');
+}
+
+// ── Toggles & Seed ──
+function togOpt(k,btn){activeToggles[k]=!activeToggles[k];btn.classList.toggle('on',activeToggles[k])}
+function togSeedLock(){
+  if(!seedLocked&&!seedVal){toast('Enter a seed first');return}
+  seedLocked=!seedLocked;
+  const btn=$('seedLockBtn'),wrap=$('seedWrap');
+  if(btn){btn.textContent=seedLocked?'🔒 Locked':'🔓 Lock';btn.classList.toggle('locked',seedLocked)}
+  if(wrap)wrap.classList.toggle('seedLocked',seedLocked);
+}
+function clearSeed(){
+  seedVal='';seedLocked=false;
+  const i=$('seedInp'),b=$('seedLockBtn'),w=$('seedWrap');
+  if(i)i.value='';if(b){b.textContent='🔓 Lock';b.classList.remove('locked')}if(w)w.classList.remove('seedLocked');
+}
+
+// ── Presets ──
+function renderPresets(){
+  const ps=getPresets();
+  return `<div class="ppill save" onclick="openModal('mPreset')">✦ Save preset</div>`
+    +ps.map(p=>`<div class="ppill" onclick="applyPreset('${p.id}')">${esc(p.name)}<span class="ppDel" onclick="delPreset(event,'${p.id}')">×</span></div>`).join('');
+}
+function confirmSavePreset(){
+  const name=$('pNameInp').value.trim();if(!name){toast('Enter a name');return}
+  const ps=getPresets();
+  ps.push({id:uid(),name,pose:activePose,clothing:activeClothing,state:activeState,toggles:{...activeToggles},seed:seedLocked?seedVal:null});
+  savePresets(ps);closeModal('mPreset');
+  const el=$('presetScroll');if(el)el.innerHTML=renderPresets();
+  toast('Preset saved');
+}
+function applyPreset(id){
+  const p=getPresets().find(p=>p.id===id);if(!p)return;
+  if(p.pose){activePose=p.pose;const e=$('pvPose');if(e)e.textContent=p.pose.label}
+  if(p.clothing){activeClothing=p.clothing;const e=$('pvCloth');if(e)e.textContent=p.clothing.label}
+  if(p.state){activeState=p.state;const e=$('pvState');if(e)e.textContent=p.state.label}
+  if(p.toggles)activeToggles={...p.toggles};
+  if(p.seed){seedVal=p.seed;seedLocked=true;const i=$('seedInp');if(i)i.value=seedVal}
+  const char=getChars().find(c=>c.id===curCharId);if(char)renderDetail(char);
+  toast('Preset applied');
+}
+function delPreset(e,id){
+  e.stopPropagation();savePresets(getPresets().filter(p=>p.id!==id));
+  const el=$('presetScroll');if(el)el.innerHTML=renderPresets();toast('Preset deleted');
+}
+
+// ── Prompt Building ──
+function buildFallback(char,pose,clothing,state,toggles){
+  const fem=char.gender==='Female'||char.gender==='Non-binary';
+  const parts=['score_9, score_8_up, score_7_up, masterpiece, (photorealistic:1.3), ultra detailed, 8k'];
+  const ethMap={'Caucasian / White':'caucasian woman','East Asian':'east asian woman','South Asian':'south asian woman, indian woman',
+    'Southeast Asian':'southeast asian woman','Black / African':'black woman','Hispanic / Latina':'hispanic woman, latina',
+    'Middle Eastern':'middle eastern woman','Mixed / Multiracial':'mixed race woman'};
+  parts.push(ethMap[char.ethnicity]||(fem?'beautiful woman':'handsome man'));
+  if(char.age)parts.push(char.age+' years old');
+  if(char.face){
+    ['faceShape','eyeColor','hairColor','hairLength','hairStyle','features'].forEach(k=>{if(char.face[k])parts.push(char.face[k])});
+  }
+  if(char.build){
+    if(char.build.bodyType)parts.push(char.build.bodyType.toLowerCase());
+    if(fem&&char.build.breastSize)parts.push(char.build.breastSize.toLowerCase());
+  }
+  if(fem)parts.push('facing camera, front view, looking at viewer');
+  if(clothing)parts.push(clothing.prompt);
+  if(pose)parts.push(pose.prompt);
+  if(state)parts.push(state.prompt);
+  if(fem){
+    if(toggles.sheer)parts.push('sheer fabric, see-through material');
+    if(toggles.hardNipples)parts.push('hard nipples, erect nipples, visible through fabric');
+    if(clothing&&(clothing.label==='Nude'||clothing.label==='Topless'))parts.push('breasts visible, bare breasts');
+  }else{
+    if(toggles.erect)parts.push('erect penis, hard cock');
+    if(toggles.holding)parts.push('holding penis, hand on cock');
+  }
+  parts.push('solo, high resolution, beautiful lighting, professional photography');
+  return parts.filter(Boolean).join(', ');
+}
+
+async function buildPromptOR(char,pose,clothing,state,toggles,orKey){
+  const fem=char.gender==='Female'||char.gender==='Non-binary';
+  const sys=`You are a Stable Diffusion prompt engineer. Given character details, output ONLY a comma-separated SD tag list. No sentences, no explanation, just tags. Start with: score_9, score_8_up, score_7_up, masterpiece, (photorealistic:1.3), ultra detailed, 8k. ${fem?'Always include: facing camera, front view, looking at viewer, solo':'Always include: facing camera, looking at viewer, solo'}.`;
+  const usr=`Character: ${JSON.stringify({name:char.name,gender:char.gender,age:char.age,ethnicity:char.ethnicity,build:char.build,face:char.face})}
+Clothing: ${clothing?clothing.prompt:'tasteful default'}
+Pose: ${pose?pose.prompt:'standing neutral'}
+Expression: ${state?state.prompt:'neutral'}
+${fem&&toggles.hardNipples?'Add: hard nipples, erect nipples':''}
+${fem&&toggles.sheer?'Add: sheer fabric, see-through':''}
+${!fem&&toggles.erect?'Add: erect penis':''}
+${fem&&clothing&&(clothing.label==='Nude'||clothing.label==='Topless')?'Add: breasts visible, bare breasts':''}`;
+
+  const resp=await fetch('https://openrouter.ai/api/v1/chat/completions',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+orKey},
+    body:JSON.stringify({model:'openai/gpt-4o-mini',messages:[{role:'system',content:sys},{role:'user',content:usr}],stream:true,max_tokens:400})
+  });
+  if(!resp.ok)throw new Error('OR '+resp.status);
+  const reader=resp.body.getReader(),dec=new TextDecoder();
+  let result='';
+  while(true){
+    const{done,value}=await reader.read();if(done)break;
+    for(const line of dec.decode(value).split('\n')){
+      if(line.startsWith('data: ')&&line!=='data: [DONE]'){
+        try{result+=(JSON.parse(line.slice(6)).choices?.[0]?.delta?.content||'')}catch{}
+      }
+    }
+  }
+  return result.trim();
+}
+
+async function buildPrompt(char,pose,clothing,state,toggles,orKey){
+  if(orKey){try{const p=await buildPromptOR(char,pose,clothing,state,toggles,orKey);if(p)return p}catch(e){console.warn('OR failed:',e)}}
+  return buildFallback(char,pose,clothing,state,toggles);
+}
+
+// ── Venice API ──
+async function callVenice(prompt,seed,model,key){
+  const resp=await fetch('https://api.venice.ai/api/v1/image/generate',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+    body:JSON.stringify({model:model||'lustify-sdxl',prompt,negative_prompt:NEG,width:832,height:1216,steps:25,cfg_scale:7.5,seed,safe_mode:false,return_binary:false})
+  });
+  if(!resp.ok){const t=await resp.text();throw new Error(`Venice ${resp.status}: ${t.slice(0,120)}`)}
+  const d=await resp.json();
+  let b64=null;
+  if(d.images?.[0]){const i=d.images[0];b64=typeof i==='string'?i:i.url||i.b64_json}
+  else if(d.data?.[0]){const i=d.data[0];b64=i.b64_json||i.url}
+  if(!b64)throw new Error('Unexpected Venice response');
+  return b64.replace(/^data:image\/\w+;base64,/,'');
+}
+
+// ── Generate Portrait ──
+async function genPortrait(){
+  const char=getChars().find(c=>c.id===curCharId);if(!char)return;
+  const s=getSettings();
+  if(!s.veniceKey){toast('Add your Venice API key in Settings');return}
+  const btn=$('genBtn'),stEl=$('promptSt');
+  btn.disabled=true;btn.classList.add('loading');
+  try{
+    const seed=seedLocked&&seedVal?parseInt(seedVal):Math.floor(Math.random()*2147483647);
+    if(stEl)stEl.textContent=s.orKey?'Building AI prompt…':'Building prompt…';
+    const prompt=await buildPrompt(char,activePose,activeClothing,activeState,activeToggles,s.orKey);
+    if(stEl)stEl.textContent='Generating portrait…';
+    const imageData=await callVenice(prompt,seed,s.model,s.veniceKey);
+    const rec={characterId:char.id,imageData,prompt,seed,model:s.model,poseLabel:activePose?.label||'',clothingLabel:activeClothing?.label||'',createdAt:Date.now()};
+    await DB.add(rec);
+    if(!seedLocked){seedVal=seed.toString();const i=$('seedInp');if(i)i.value=seedVal}
+    curPortraits=await DB.forChar(char.id);
+    renderCarousel(char);
+    const crsl=$('crsl');if(crsl)crsl.scrollLeft=0;
+    curCarIdx=0;
+    if(stEl)stEl.textContent=`✓ Generated · Seed: ${seed}`;
+    toast('Portrait generated ✦');
+  }catch(err){
+    console.error(err);toast('Generation failed: '+(err.message||'error'));
+    if(stEl)stEl.textContent='Generation failed';
+  }finally{btn.disabled=false;btn.classList.remove('loading')}
+}
+
+// ── Fullscreen ──
+async function openFS(id){
+  const p=await DB.get(id);if(!p)return;
+  curFsId=id;
+  $('fsImg').src=imgSrc(p.imageData);
+  $('fsSeed').textContent=p.seed?`Seed: ${p.seed}`:'';
+  $('fsDelBtn').onclick=delFsPortrait;
+  $('portFS').classList.add('open');
+}
+function closeFS(){$('portFS').classList.remove('open');curFsId=null}
+async function delFsPortrait(){
+  if(!curFsId)return;await DB.del(curFsId);closeFS();
+  const char=getChars().find(c=>c.id===curCharId);
+  if(char){curPortraits=await DB.forChar(char.id);renderCarousel(char);curCarIdx=0}
+  toast('Portrait deleted');
+}
+
+// ── Delete Character ──
+async function confirmDelChar(){
+  if(!curCharId)return;
+  closeModal('mDelete');
+  await DB.delForChar(curCharId);
+  saveChars(getChars().filter(c=>c.id!==curCharId));
+  curCharId=null;showScreen('gallery');toast('Character deleted');
+}
+
+// ── Wizard ──
+let wizData={};
+function openWizard(){
+  wizStep=0;wizData={};wizPortrait=null;
+  ['wizName','wizAge','wizMeas','wizFeat','wizNotes','wizConfirm'].forEach(id=>{const e=$(id);if(e)e.value=''});
+  ['wizGenderC','wizBodyC','wizBustC','wizFaceC','wizEyeC','wizHairColC','wizHairLenC','wizHairStC','wizTraitsC'].forEach(id=>{
+    const el=$(id);if(!el)return;
+    el.querySelectorAll('.chip').forEach((c,i)=>c.classList.toggle('sel',i===0&&id==='wizGenderC'));
+  });
+  const box=$('wizPortBox');
+  if(box)box.innerHTML=`<div class="wGenOv" id="wGenOv"><div class="bigSpin"></div><p class="genHint" id="wGenHint">Building prompt…</p></div>`;
+  updateWiz();openSheet('shWiz');
+}
+
+function updateWiz(){
+  document.querySelectorAll('#wizProg .wp').forEach((el,i)=>{
+    el.classList.remove('active','done');
+    if(i<wizStep)el.classList.add('done');else if(i===wizStep)el.classList.add('active');
+  });
+  document.querySelectorAll('.wstep').forEach((el,i)=>el.classList.toggle('active',i===wizStep));
+  const titles=['Identity','Build','Appearance','Personality','Portrait Preview','Confirm & Save'];
+  $('wizTitle').textContent=titles[wizStep]||'New Character';
+  const back=$('wizBack'),next=$('wizNext');
+  if(back)back.style.display=wizStep===0?'none':'';
+  if(next)next.textContent=wizStep===5?'Save Character':'Continue';
+  const gender=getChipV('wizGenderC');
+  const bustG=$('wizBustGrp');if(bustG)bustG.style.display=gender==='Male'?'none':'';
+  if(wizStep===5){const n=$('wizConfirm'),nf=$('wizName');if(n&&nf&&!n.value)n.value=nf.value;renderWizSummary()}
+}
+
+function wizNext(){
+  if(wizStep===0){const n=$('wizName').value.trim();if(!n){toast('Enter a character name');return}}
+  if(wizStep===5){saveWizChar();return}
+  wizStep=Math.min(wizStep+1,5);
+  updateWiz();
+  if(wizStep===4)wizGenPortrait();
+}
+function wizBack(){wizStep=Math.max(wizStep-1,0);updateWiz()}
+
+async function wizGenPortrait(){
+  const s=getSettings();
+  if(!s.veniceKey){toast('Add Venice API key in Settings first');return}
+  const btn=$('wizRegenBtn');if(btn)btn.disabled=true;
+  const ov=$('wGenOv'),hint=$('wGenHint');
+  if(ov)ov.classList.remove('gone');
+  if(hint)hint.textContent='Building prompt…';
+  try{
+    const wc=gatherWizData();
+    if(hint)hint.textContent=s.orKey?'Building AI prompt…':'Generating…';
+    const prompt=await buildPrompt(wc,null,null,null,{},s.orKey);
+    if(hint)hint.textContent='Generating portrait…';
+    const seed=Math.floor(Math.random()*2147483647);
+    const imageData=await callVenice(prompt,seed,s.model,s.veniceKey);
+    wizPortrait={imageData,prompt,seed,model:s.model};
+    if(ov)ov.classList.add('gone');
+    const box=$('wizPortBox');
+    let img=box.querySelector('img');
+    if(!img){img=document.createElement('img');img.style.cssText='width:100%;height:100%;object-fit:cover';box.insertBefore(img,ov)}
+    img.src=imgSrc(imageData);
+    if(ov)box.appendChild(ov);
+  }catch(err){
+    console.error(err);if(ov)ov.classList.add('gone');
+    toast('Portrait failed: '+(err.message||'error'));
+  }finally{if(btn)btn.disabled=false}
+}
+
+function gatherWizData(){
+  return{
+    id:uid(),name:$('wizName').value.trim(),gender:getChipV('wizGenderC'),
+    age:$('wizAge').value,ethnicity:$('wizEthn').value,
+    build:{height:$('wizHeight').value,bodyType:getChipV('wizBodyC'),breastSize:getChipV('wizBustC'),measurements:$('wizMeas').value},
+    face:{faceShape:getChipV('wizFaceC'),eyeColor:getChipV('wizEyeC'),hairColor:getChipV('wizHairColC'),hairLength:getChipV('wizHairLenC'),hairStyle:getChipV('wizHairStC'),features:$('wizFeat').value},
+    personality:{traits:getMulChipV('wizTraitsC'),notes:$('wizNotes')?$('wizNotes').value:''}
+  };
+}
+
+async function saveWizChar(){
+  const confirm=$('wizConfirm').value.trim();if(!confirm){toast('Enter a name');return}
+  const char=gatherWizData();char.name=confirm;char.id=uid();char.createdAt=Date.now();
+  const chars=getChars();chars.push(char);saveChars(chars);
+  if(wizPortrait)await DB.add({characterId:char.id,imageData:wizPortrait.imageData,prompt:wizPortrait.prompt,seed:wizPortrait.seed,model:wizPortrait.model,poseLabel:'',clothingLabel:'',createdAt:Date.now()});
+  closeSheet('shWiz');closeAllSheets();
+  toast(`${confirm} added to gallery ✦`);
+  setTimeout(()=>openChar(char.id),350);
+}
+
+function renderWizSummary(){
+  const el=$('wizSummary');if(!el)return;
+  const c=gatherWizData();
+  const items=[c.gender,c.age?`Age ${c.age}`:'',c.ethnicity||'',c.build?.bodyType||'',[c.face?.hairColor,c.face?.hairLength].filter(Boolean).join(' ')].filter(Boolean);
+  el.innerHTML=`<div class="infoCard">${items.map(i=>`<div class="infoRow"><span class="iVal">${esc(i)}</span></div>`).join('')}</div>`;
+}
+
+// ── Chip Helpers ──
+function getChipV(gid){const el=$(gid);if(!el)return'';const s=el.querySelector('.chip.sel');return s?s.dataset.val:''}
+function getMulChipV(gid){const el=$(gid);if(!el)return[];return[...el.querySelectorAll('.chip.sel')].map(c=>c.dataset.val)}
+function selChip(el,gid){$(gid).querySelectorAll('.chip').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');
+  if(gid==='wizGenderC'){const g=el.dataset.val;const bg=$('wizBustGrp');if(bg)bg.style.display=g==='Male'?'none':''}}
+function togChip(el){el.classList.toggle('sel')}
+
+// ── Settings ──
+function syncSettings(){
+  const s=getSettings();
+  const vk=$('sVeniceKey'),ok=$('sOrKey'),m=$('sModel'),vb=$('versionBadge');
+  if(vk)vk.value=s.veniceKey||'';
+  if(ok)ok.value=s.orKey||'';
+  if(m)m.value=s.model||'lustify-sdxl';
+  if(vb)vb.textContent='v'+VERSION;
+  syncPinSettings();
+}
+function saveSettingsNow(){
+  LS.set('ps_settings',{
+    veniceKey:$('sVeniceKey').value.trim(),
+    orKey:$('sOrKey').value.trim(),
+    model:$('sModel').value
+  });
+}
+
+// ── PWA ──
+function setupPWA(){
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('./sw.js').catch(e=>console.warn('SW reg failed:',e));
+  }
+}
+
+// ── Init ──
+async function init(){
+  setupPWA();
+  await DB.ready;
+  $('scrChar').classList.add('right');
+  $('scrSettings').classList.add('right');
+  await renderGallery();
+  syncSettings();
+
+  // PIN — show lock on launch if enabled, otherwise hide screen immediately
+  if(isPINEnabled()){
+    showPinScreen();
+  } else {
+    $('pinScreen').classList.add('hidden');
+  }
+
+  // Android back — also handles dismissing PIN screen via back button
+  history.pushState(null,'',location.href);
+  window.addEventListener('popstate',()=>{
+    if($('pinScreen')&&!$('pinScreen').classList.contains('hidden')){history.pushState(null,'',location.href);return}
+    if($('portFS').classList.contains('open')){closeFS();history.pushState(null,'',location.href)}
+    else if(document.querySelector('.sheet.open')){closeAllSheets();history.pushState(null,'',location.href)}
+    else if(curScreen!=='gallery'){showScreen('gallery');history.pushState(null,'',location.href)}
+  });
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){if($('portFS').classList.contains('open'))closeFS();else closeAllSheets()}});
+}
+init().catch(console.error);
+
+</script>
+</body>
+</html>
