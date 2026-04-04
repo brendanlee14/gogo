@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 
 :root{
@@ -20,7 +20,7 @@
   --prim:#7d1a2b;--priml:#a8243a;--acc:#c8a44a;--accd:#8f7433;
   --cream:#f2ede4;--creamd:#b5ada0;--muted:#6a5e52;
   --bdr:#31161e;--bdrl:#3e1e28;
-  --serif:'Cormorant Garamond',Georgia,serif;--sans:'Jost',system-ui,sans-serif;
+  --serif:'Plus Jakarta Sans',system-ui,sans-serif;--sans:'Plus Jakarta Sans',system-ui,sans-serif;--mono:'DM Mono',monospace;
   --st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px);
   --r:16px;--rs:10px;
 }
@@ -33,7 +33,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--cream);fo
 .nav{flex-shrink:0;display:flex;align-items:center;gap:10px;padding:calc(var(--st) + 12px) 16px 12px;background:var(--sf);border-bottom:1px solid var(--bdr);min-height:calc(var(--st) + 56px);position:relative;z-index:100}
 .navG{flex:1;overflow:hidden}
 .navW{display:block;font-size:10px;font-weight:400;color:var(--acc);letter-spacing:.15em;text-transform:uppercase;margin-bottom:1px}
-.navT{font-family:var(--serif);font-size:22px;font-weight:600;letter-spacing:.02em}
+.navT{font-family:var(--sans);font-size:20px;font-weight:700;letter-spacing:-.02em}
 .iBtn{width:40px;height:40px;border-radius:50%;border:1px solid var(--bdrl);background:var(--sf2);color:var(--creamd);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background .15s}
 .iBtn:active{background:var(--sf3)}
 .iBtn svg{width:20px;height:20px;stroke-width:1.5}
@@ -48,12 +48,12 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--cream);fo
 .card-ph svg{width:36px;height:36px;color:var(--muted);opacity:.4}
 .card-ph span{font-size:11px;color:var(--muted)}
 .card-ov{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(8,4,6,.93) 38%);padding:28px 12px 12px}
-.card-name{font-family:var(--serif);font-size:17px;font-weight:600;text-shadow:0 1px 6px rgba(0,0,0,.9)}
+.card-name{font-family:var(--sans);font-size:16px;font-weight:700;letter-spacing:-.01em;text-shadow:0 1px 6px rgba(0,0,0,.9)}
 .card-role{font-size:10px;color:var(--acc);text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
 .cntB{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:3px 9px;font-size:11px;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:4px}
 .empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:48px 32px;text-align:center}
 .emptyIcon{font-size:52px;opacity:.25}
-.empty h2{font-family:var(--serif);font-size:26px;font-weight:600;color:var(--creamd)}
+.empty h2{font-family:var(--sans);font-size:24px;font-weight:700;letter-spacing:-.02em;color:var(--creamd)}
 .empty p{font-size:14px;color:var(--muted);line-height:1.6}
 .fab{position:fixed;bottom:calc(20px + var(--sb));right:18px;width:54px;height:54px;border-radius:50%;background:linear-gradient(140deg,var(--prim),var(--priml));border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 24px rgba(125,26,43,.55);transition:transform .15s;z-index:90}
 .fab:active{transform:scale(.9)}
@@ -76,7 +76,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--cream);fo
 .dot.on{background:var(--acc);width:16px}
 .dBody{padding:16px}
 .dNR{display:flex;align-items:baseline;gap:10px;margin-bottom:3px}
-.dName{font-family:var(--serif);font-size:30px;font-weight:600;line-height:1}
+.dName{font-family:var(--sans);font-size:26px;font-weight:700;line-height:1;letter-spacing:-.03em}
 .rBadge{font-size:11px;color:var(--acc);text-transform:uppercase;letter-spacing:.1em}
 .dMeta{font-size:13px;color:var(--muted);margin-bottom:18px}
 .sHead{font-size:10px;font-weight:600;color:var(--acc);text-transform:uppercase;letter-spacing:.14em;margin:18px 0 8px;display:flex;align-items:center;gap:8px}
@@ -94,7 +94,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--cream);fo
 .tog{padding:8px 13px;border-radius:20px;border:1px solid var(--bdrl);background:var(--sf);color:var(--creamd);font-size:13px;cursor:pointer;transition:all .15s;font-family:var(--sans)}
 .tog.on{background:rgba(125,26,43,.35);border-color:var(--priml);color:var(--cream)}
 .seedWrap{display:flex;gap:8px;margin-bottom:8px}
-.seedInp{flex:1;background:var(--sf);border:1px solid var(--bdr);border-radius:var(--rs);padding:10px 12px;color:var(--cream);font-family:var(--sans);font-size:14px;font-variant-numeric:tabular-nums}
+.seedInp{flex:1;background:var(--sf);border:1px solid var(--bdr);border-radius:var(--rs);padding:10px 12px;color:var(--cream);font-family:var(--mono);font-size:13px;font-variant-numeric:tabular-nums}
 .seedInp::placeholder{color:var(--muted)}
 .seedInp:focus{outline:none;border-color:var(--accd)}
 .seedLocked .seedInp{border-color:rgba(200,164,74,.5)}
@@ -107,7 +107,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--cream);fo
 .ppill.save{border-style:dashed;border-color:var(--accd);color:var(--acc)}
 .ppDel{color:var(--muted);font-size:15px;line-height:1;margin-left:2px}
 .promptSt{font-size:11px;color:var(--muted);padding:4px 0;font-style:italic;min-height:18px}
-.genBtn{width:100%;padding:15px;background:linear-gradient(135deg,var(--prim) 0%,var(--priml) 100%);border:none;border-radius:var(--r);color:#fff;font-family:var(--serif);font-size:19px;font-weight:600;letter-spacing:.05em;cursor:pointer;position:relative;overflow:hidden;transition:transform .15s,opacity .15s;margin-top:14px;margin-bottom:20px}
+.genBtn{width:100%;padding:15px;background:linear-gradient(135deg,var(--prim) 0%,var(--priml) 100%);border:none;border-radius:var(--r);color:#fff;font-family:var(--sans);font-size:16px;font-weight:700;letter-spacing:.01em;cursor:pointer;position:relative;overflow:hidden;transition:transform .15s,opacity .15s;margin-top:14px;margin-bottom:20px}
 .genBtn:not([disabled]):active{transform:scale(.98)}
 .genBtn[disabled]{opacity:.5}
 .genBtnTxt{transition:opacity .2s}
@@ -120,7 +120,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--cream);fo
 .sScroll{flex:1;overflow-y:auto;padding:16px;padding-bottom:calc(16px + var(--sb));-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .sScroll::-webkit-scrollbar{display:none}
 .sCard{background:var(--sf);border:1px solid var(--bdr);border-radius:var(--r);padding:16px;margin-bottom:14px}
-.sCardT{font-family:var(--serif);font-size:17px;font-weight:600;margin-bottom:14px}
+.sCardT{font-family:var(--sans);font-size:15px;font-weight:700;letter-spacing:-.01em;margin-bottom:14px}
 .fg{margin-bottom:14px}
 .fl{display:block;font-size:11px;color:var(--acc);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-weight:500}
 .fi{width:100%;background:var(--sf2);border:1px solid var(--bdr);border-radius:var(--rs);padding:11px 13px;color:var(--cream);font-family:var(--sans);font-size:14px;transition:border-color .15s;-webkit-appearance:none}
@@ -137,7 +137,7 @@ textarea.fi{resize:none;line-height:1.5}
 .sheet.open{transform:translateY(0)}
 .pull{width:38px;height:4px;background:var(--bdrl);border-radius:2px;margin:10px auto 2px;flex-shrink:0}
 .shHd{padding:8px 18px 10px;flex-shrink:0;display:flex;align-items:center;gap:10px}
-.shT{font-family:var(--serif);font-size:20px;font-weight:600;flex:1}
+.shT{font-family:var(--sans);font-size:18px;font-weight:700;letter-spacing:-.01em;flex:1}
 .shBody{flex:1;overflow-y:auto;padding:0 18px 16px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .shBody::-webkit-scrollbar{display:none}
 .shFoot{padding:10px 18px;border-top:1px solid var(--bdr);flex-shrink:0;display:flex;gap:9px}
@@ -173,7 +173,7 @@ textarea.fi{resize:none;line-height:1.5}
 .mWrap{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:400;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .22s}
 .mWrap.open{opacity:1;pointer-events:all}
 .mBox{width:100%;max-width:340px;background:var(--sf2);border:1px solid var(--bdrl);border-radius:var(--r);padding:22px}
-.mBox h3{font-family:var(--serif);font-size:20px;font-weight:600;margin-bottom:14px}
+.mBox h3{font-family:var(--sans);font-size:18px;font-weight:700;letter-spacing:-.01em;margin-bottom:14px}
 .mActs{display:flex;gap:9px;margin-top:16px}
 .btn{padding:12px 18px;border-radius:var(--rs);border:1px solid transparent;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;transition:all .15s}
 .btnP{background:var(--prim);color:#fff;border-color:var(--priml);flex:1}
@@ -199,7 +199,7 @@ textarea.fi{resize:none;line-height:1.5}
 #pinScreen.hidden{opacity:0;transform:scale(1.06);pointer-events:none}
 .pinInner{display:flex;flex-direction:column;align-items:center;gap:0;padding:0 24px;width:100%;max-width:320px}
 .pinLogo svg{width:72px;height:72px;border-radius:18px;box-shadow:0 8px 32px rgba(125,26,43,.5)}
-.pinAppName{font-family:var(--serif);font-size:32px;font-weight:600;letter-spacing:.06em;margin-top:14px;color:var(--cream)}
+.pinAppName{font-family:var(--sans);font-size:28px;font-weight:800;letter-spacing:-.03em;margin-top:14px;color:var(--cream)}
 .pinSubtitle{font-size:13px;color:var(--muted);margin-top:4px;margin-bottom:28px;letter-spacing:.03em;min-height:20px;transition:color .2s}
 .pinSubtitle.err{color:#e05;animation:shake .35s ease}
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
@@ -211,7 +211,7 @@ textarea.fi{resize:none;line-height:1.5}
 .pinKey{
   aspect-ratio:1;border-radius:50%;border:1px solid var(--bdrl);
   background:var(--sf2);color:var(--cream);
-  font-family:var(--serif);font-size:26px;font-weight:600;
+  font-family:var(--sans);font-size:24px;font-weight:600;
   cursor:pointer;display:flex;align-items:center;justify-content:center;
   transition:background .12s,transform .1s;-webkit-tap-highlight-color:transparent;
 }
@@ -239,7 +239,7 @@ textarea.fi{resize:none;line-height:1.5}
 <!-- GALLERY -->
 <div class="screen" id="scrGallery">
   <div class="nav">
-    <div class="navG"><span class="navW">GoGo</span><span class="navT" style="font-size:26px">Gallery</span></div>
+    <div class="navG"><span class="navW" style="font-size:9px;letter-spacing:.2em">GoGo</span><span class="navT" style="font-size:24px">Gallery</span></div>
     <button class="iBtn" onclick="showScreen('settings')" aria-label="Settings">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
     </button>
@@ -319,6 +319,18 @@ textarea.fi{resize:none;line-height:1.5}
       </div>
     </div>
     <div class="sCard">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div class="sCardT" style="margin-bottom:0">Error Log</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btnG" style="font-size:11px;padding:5px 10px" onclick="copyErrorLog()">Copy</button>
+          <button class="btn btnG" style="font-size:11px;padding:5px 10px" onclick="clearErrorLog()">Clear</button>
+        </div>
+      </div>
+      <div id="errLogBody" style="font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.7;max-height:180px;overflow-y:auto;background:var(--bg);border:1px solid var(--bdr);border-radius:var(--rs);padding:10px">
+        <span style="color:var(--muted);font-style:italic">No errors logged</span>
+      </div>
+    </div>
+    <div class="sCard">
       <div class="sCardT">About</div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <span style="font-family:var(--serif);font-size:16px;font-weight:600;color:var(--cream)">GoGo</span>
@@ -353,14 +365,99 @@ textarea.fi{resize:none;line-height:1.5}
           <div class="chip" data-val="Non-binary" onclick="selChip(this,'wizGenderC')">Non-binary</div>
         </div>
       </div>
-      <div class="fg"><label class="fl">Name</label><input type="text" class="fi" id="wizName" placeholder="Character name…" autocomplete="off"></div>
       <div class="fg"><label class="fl">Age</label><input type="number" class="fi" id="wizAge" placeholder="e.g. 24" min="18" max="80"></div>
       <div class="fg"><label class="fl">Ethnicity</label>
         <select class="fi" id="wizEthn">
           <option value="">Select ethnicity…</option>
-          <option>Caucasian / White</option><option>East Asian</option><option>South Asian</option>
-          <option>Southeast Asian</option><option>Black / African</option><option>Hispanic / Latina</option>
-          <option>Middle Eastern</option><option>Mixed / Multiracial</option><option>Other</option>
+          <optgroup label="Europe">
+            <option>British / English</option>
+            <option>Irish</option>
+            <option>Scottish / Welsh</option>
+            <option>French</option>
+            <option>German / Austrian / Swiss</option>
+            <option>Italian</option>
+            <option>Spanish / Catalan</option>
+            <option>Portuguese</option>
+            <option>Dutch / Belgian / Flemish</option>
+            <option>Scandinavian / Nordic</option>
+            <option>Polish / Czech / Slovak</option>
+            <option>Russian / Ukrainian / Belarusian</option>
+            <option>Greek / Cypriot</option>
+            <option>Romanian / Moldovan</option>
+            <option>Hungarian / Serbian / Croatian</option>
+            <option>Finnish / Estonian / Latvian / Lithuanian</option>
+            <option>Jewish / Ashkenazi</option>
+          </optgroup>
+          <optgroup label="East Asia">
+            <option>Chinese / Han</option>
+            <option>Japanese</option>
+            <option>Korean</option>
+            <option>Taiwanese</option>
+            <option>Mongolian</option>
+            <option>Tibetan</option>
+          </optgroup>
+          <optgroup label="Southeast Asia">
+            <option>Thai</option>
+            <option>Vietnamese</option>
+            <option>Filipino / Filipina</option>
+            <option>Indonesian / Javanese / Balinese</option>
+            <option>Malaysian / Singaporean</option>
+            <option>Cambodian / Khmer</option>
+            <option>Burmese / Myanmar</option>
+            <option>Laotian</option>
+          </optgroup>
+          <optgroup label="South Asia">
+            <option>Indian / North Indian</option>
+            <option>Indian / South Indian / Tamil</option>
+            <option>Indian / Bengali</option>
+            <option>Pakistani / Punjabi</option>
+            <option>Bangladeshi</option>
+            <option>Sri Lankan / Sinhalese</option>
+            <option>Nepali</option>
+          </optgroup>
+          <optgroup label="Middle East &amp; Central Asia">
+            <option>Arab / Egyptian</option>
+            <option>Arab / Levantine (Syrian, Lebanese, Jordanian)</option>
+            <option>Arab / Gulf (Emirati, Saudi, Kuwaiti)</option>
+            <option>Arab / Moroccan / Maghrebi</option>
+            <option>Iranian / Persian</option>
+            <option>Turkish</option>
+            <option>Kurdish</option>
+            <option>Israeli / Mizrahi Jewish</option>
+            <option>Afghan / Pashtun</option>
+            <option>Uzbek / Kazakh / Kyrgyz</option>
+          </optgroup>
+          <optgroup label="Sub-Saharan Africa">
+            <option>West African / Nigerian / Ghanaian</option>
+            <option>East African / Kenyan / Ethiopian</option>
+            <option>Somali</option>
+            <option>South African / Zulu / Xhosa</option>
+            <option>Congolese / Central African</option>
+            <option>Senegalese / Malian</option>
+          </optgroup>
+          <optgroup label="Americas">
+            <option>African American / Black American</option>
+            <option>Hispanic / Mexican</option>
+            <option>Hispanic / Colombian / Venezuelan</option>
+            <option>Hispanic / Argentinian / Chilean</option>
+            <option>Brazilian / Afro-Brazilian</option>
+            <option>Brazilian / Euro-Brazilian</option>
+            <option>Indigenous / Native American</option>
+            <option>Caribbean / Afro-Caribbean</option>
+          </optgroup>
+          <optgroup label="Pacific &amp; Oceania">
+            <option>Māori / Pacific Islander</option>
+            <option>Aboriginal Australian</option>
+            <option>Hawaiian / Polynesian</option>
+          </optgroup>
+          <optgroup label="Mixed &amp; Other">
+            <option>Mixed — Black &amp; White</option>
+            <option>Mixed — Asian &amp; White</option>
+            <option>Mixed — Asian &amp; Black</option>
+            <option>Mixed — Hispanic &amp; White</option>
+            <option>Mixed — Multiple</option>
+            <option>Other / Unspecified</option>
+          </optgroup>
         </select>
       </div>
     </div>
@@ -494,17 +591,24 @@ textarea.fi{resize:none;line-height:1.5}
       <div class="wizPortBox" id="wizPortBox">
         <div class="wGenOv" id="wGenOv"><div class="bigSpin"></div><p class="genHint" id="wGenHint">Building prompt…</p></div>
       </div>
-      <button class="btn btnA btnFull" onclick="wizGenPortrait()" id="wizRegenBtn" style="margin-top:8px">↻ Regenerate Portrait</button>
+      <div id="wizErrBox" style="display:none;background:rgba(180,30,50,.15);border:1px solid rgba(180,30,50,.4);border-radius:var(--rs);padding:12px 14px;margin-top:10px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+          <div>
+            <div style="font-size:12px;font-weight:600;color:#e05;margin-bottom:4px">Generation failed</div>
+            <div style="font-size:12px;color:var(--creamd);line-height:1.5;word-break:break-all" id="wizErrMsg"></div>
+          </div>
+          <button onclick="document.getElementById('wizErrBox').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;flex-shrink:0;line-height:1">×</button>
+        </div>
+      </div>
+      <button class="btn btnA btnFull" onclick="wizGenPortrait()" id="wizRegenBtn" style="margin-top:10px">↻ Regenerate Portrait</button>
     </div>
 
-    <!-- Step 5: Confirm -->
+    <!-- Step 5: Name & Save -->
     <div class="wstep" id="wstep5">
-      <div style="text-align:center;margin-bottom:18px">
-        <div class="ornament">✦</div>
-        <p style="font-family:var(--serif);font-size:20px;font-weight:600;margin:8px 0">Almost there</p>
-        <p style="font-size:13px;color:var(--muted);line-height:1.5">Confirm your character's name and save them to your gallery.</p>
+      <div style="margin-bottom:20px">
+        <p style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:16px">Almost done — give your character a name.</p>
+        <div class="fg"><label class="fl">Name</label><input type="text" class="fi" id="wizName" placeholder="Character name…" autocomplete="off"></div>
       </div>
-      <div class="fg"><label class="fl">Confirm Name</label><input type="text" class="fi" id="wizConfirm" placeholder="Character name…"></div>
       <div id="wizSummary"></div>
     </div>
 
@@ -670,6 +774,35 @@ textarea.fi{resize:none;line-height:1.5}
 
 <script>
 const VERSION = '1.0.0';
+
+// ── ERROR LOG ──
+const MAX_LOG = 50;
+function getErrLog(){return LS.get('gogo_errlog',[])}
+function saveErrLog(l){LS.set('gogo_errlog',l)}
+function logError(ctx,msg){
+  const l=getErrLog();
+  l.unshift({ts:Date.now(),ctx,msg:String(msg)});
+  if(l.length>MAX_LOG)l.length=MAX_LOG;
+  saveErrLog(l);
+  renderErrorLog();
+}
+function renderErrorLog(){
+  const el=$('errLogBody');if(!el)return;
+  const l=getErrLog();
+  if(!l.length){el.innerHTML='<span style="color:var(--muted);font-style:italic">No errors logged</span>';return}
+  el.innerHTML=l.map(e=>{
+    const d=new Date(e.ts);
+    const ts=d.toLocaleDateString()+' '+d.toLocaleTimeString();
+    return `<div style="padding:4px 0;border-bottom:1px solid var(--bdr)"><span style="color:var(--acc)">[${esc(ts)}]</span> <span style="color:var(--creamd)">${esc(e.ctx)}</span><br><span>${esc(e.msg)}</span></div>`;
+  }).join('');
+}
+function copyErrorLog(){
+  const l=getErrLog();
+  if(!l.length){toast('No errors to copy');return}
+  const txt=l.map(e=>`[${new Date(e.ts).toISOString()}] ${e.ctx}: ${e.msg}`).join('\n');
+  navigator.clipboard.writeText(txt).then(()=>toast('Copied to clipboard')).catch(()=>toast('Copy failed'));
+}
+function clearErrorLog(){saveErrLog([]);renderErrorLog();toast('Error log cleared')}
 
 // ── PIN LOCK ──
 let pinEntry = '';
@@ -1403,8 +1536,11 @@ async function genPortrait(){
     if(stEl)stEl.textContent=`✓ Generated · Seed: ${seed}`;
     toast('Portrait generated ✦');
   }catch(err){
-    console.error(err);toast('Generation failed: '+(err.message||'error'));
-    if(stEl)stEl.textContent='Generation failed';
+    console.error(err);
+    const msg=err.message||String(err)||'Unknown error';
+    logError('Portrait generation',msg);
+    toast('Generation failed: '+msg.slice(0,60));
+    if(stEl)stEl.textContent='Generation failed — check Error Log in Settings';
   }finally{btn.disabled=false;btn.classList.remove('loading')}
 }
 
@@ -1438,7 +1574,7 @@ async function confirmDelChar(){
 let wizData={};
 function openWizard(){
   wizStep=0;wizData={};wizPortrait=null;
-  ['wizName','wizAge','wizMeas','wizFeat','wizNotes','wizConfirm'].forEach(id=>{const e=$(id);if(e)e.value=''});
+  ['wizName','wizAge','wizMeas','wizFeat','wizNotes'].forEach(id=>{const e=$(id);if(e)e.value=''});
   ['wizGenderC','wizBodyC','wizBustC','wizFaceC','wizEyeC','wizHairColC','wizHairLenC','wizHairStC','wizTraitsC'].forEach(id=>{
     const el=$(id);if(!el)return;
     el.querySelectorAll('.chip').forEach((c,i)=>c.classList.toggle('sel',i===0&&id==='wizGenderC'));
@@ -1454,18 +1590,17 @@ function updateWiz(){
     if(i<wizStep)el.classList.add('done');else if(i===wizStep)el.classList.add('active');
   });
   document.querySelectorAll('.wstep').forEach((el,i)=>el.classList.toggle('active',i===wizStep));
-  const titles=['Identity','Build','Appearance','Personality','Portrait Preview','Confirm & Save'];
+  const titles=['Identity','Build','Appearance','Personality','Portrait Preview','Name & Save'];
   $('wizTitle').textContent=titles[wizStep]||'New Character';
   const back=$('wizBack'),next=$('wizNext');
   if(back)back.style.display=wizStep===0?'none':'';
   if(next)next.textContent=wizStep===5?'Save Character':'Continue';
   const gender=getChipV('wizGenderC');
   const bustG=$('wizBustGrp');if(bustG)bustG.style.display=gender==='Male'?'none':'';
-  if(wizStep===5){const n=$('wizConfirm'),nf=$('wizName');if(n&&nf&&!n.value)n.value=nf.value;renderWizSummary()}
+  if(wizStep===5){renderWizSummary()}
 }
 
 function wizNext(){
-  if(wizStep===0){const n=$('wizName').value.trim();if(!n){toast('Enter a character name');return}}
   if(wizStep===5){saveWizChar();return}
   wizStep=Math.min(wizStep+1,5);
   updateWiz();
@@ -1495,8 +1630,12 @@ async function wizGenPortrait(){
     img.src=imgSrc(imageData);
     if(ov)box.appendChild(ov);
   }catch(err){
-    console.error(err);if(ov)ov.classList.add('gone');
-    toast('Portrait failed: '+(err.message||'error'));
+    console.error(err);
+    if(ov)ov.classList.add('gone');
+    const msg=err.message||String(err)||'Unknown error';
+    logError('Wizard portrait generation',msg);
+    const eb=$('wizErrBox'),em=$('wizErrMsg');
+    if(eb&&em){em.textContent=msg;eb.style.display='block'}
   }finally{if(btn)btn.disabled=false}
 }
 
@@ -1511,12 +1650,12 @@ function gatherWizData(){
 }
 
 async function saveWizChar(){
-  const confirm=$('wizConfirm').value.trim();if(!confirm){toast('Enter a name');return}
-  const char=gatherWizData();char.name=confirm;char.id=uid();char.createdAt=Date.now();
+  const name=$('wizName').value.trim();if(!name){toast('Enter a name');return}
+  const char=gatherWizData();char.name=name;char.id=uid();char.createdAt=Date.now();
   const chars=getChars();chars.push(char);saveChars(chars);
   if(wizPortrait)await DB.add({characterId:char.id,imageData:wizPortrait.imageData,prompt:wizPortrait.prompt,seed:wizPortrait.seed,model:wizPortrait.model,poseLabel:'',clothingLabel:'',createdAt:Date.now()});
   closeSheet('shWiz');closeAllSheets();
-  toast(`${confirm} added to gallery ✦`);
+  toast(`${name} added to gallery ✦`);
   setTimeout(()=>openChar(char.id),350);
 }
 
@@ -1543,6 +1682,7 @@ function syncSettings(){
   if(m)m.value=s.model||'lustify-sdxl';
   if(vb)vb.textContent='v'+VERSION;
   syncPinSettings();
+  renderErrorLog();
 }
 function saveSettingsNow(){
   LS.set('ps_settings',{
