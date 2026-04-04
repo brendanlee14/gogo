@@ -303,6 +303,7 @@ textarea.fi{resize:none;line-height:1.5}
           <option value="fluently-xl-final">Fluently XL</option>
           <option value="nai-banana-pro">Nano Banana Pro</option>
         </select>
+        <div id="modelFetchSt" style="font-size:11px;color:var(--muted);margin-top:5px;font-style:italic"></div>
       </div>
     </div>
     <div class="sCard">
@@ -1498,22 +1499,52 @@ async function buildPrompt(char,pose,clothing,state,toggles,orKey){
 }
 
 // ── Venice API ──
-async function callVenice(prompt,seed,model,key){
+async function callVenice(prompt,seed,model,key,onStage){
+  onStage&&onStage('queued','Queued — waiting for Venice…');
+  const t0=Date.now();
   const resp=await fetch('https://api.venice.ai/api/v1/image/generate',{
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
     body:JSON.stringify({model:model||'lustify-sdxl',prompt,negative_prompt:NEG,width:832,height:1216,steps:25,cfg_scale:7.5,seed,safe_mode:false,return_binary:false})
   });
+  onStage&&onStage('decoding','Decoding image…');
   if(!resp.ok){const t=await resp.text();throw new Error(`Venice ${resp.status}: ${t.slice(0,120)}`)}
   const d=await resp.json();
+  const elapsed=((Date.now()-t0)/1000).toFixed(1);
+  const timing=d.timing;
   let b64=null;
   if(d.images?.[0]){const i=d.images[0];b64=typeof i==='string'?i:i.url||i.b64_json}
   else if(d.data?.[0]){const i=d.data[0];b64=i.b64_json||i.url}
   if(!b64)throw new Error('Unexpected Venice response');
+  const inferMs=timing?.inferenceDuration;
+  const queueMs=timing?.inferenceQueueTime;
+  const doneMsg=inferMs
+    ?`✓ Done in ${elapsed}s (queue ${(queueMs/1000).toFixed(1)}s, render ${(inferMs/1000).toFixed(1)}s)`
+    :`✓ Done in ${elapsed}s`;
+  onStage&&onStage('done',doneMsg);
   return b64.replace(/^data:image\/\w+;base64,/,'');
 }
 
 // ── Generate Portrait ──
+const GEN_STAGES={
+  prompt:  {label:'Building prompt',  pct:15},
+  queued:  {label:'Queued',           pct:35},
+  decoding:{label:'Rendering',        pct:80},
+  done:    {label:'Done',             pct:100},
+};
+function setGenStage(stEl,stage,detail){
+  if(!stEl)return;
+  const s=GEN_STAGES[stage];
+  stEl.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <span style="font-size:11px;color:${stage==='done'?'var(--acc)':'var(--creamd)'}">${detail||s.label}</span>
+      <span style="font-size:10px;color:var(--muted);font-family:var(--mono)">${s.pct}%</span>
+    </div>
+    <div style="height:2px;background:var(--bdr);border-radius:1px;overflow:hidden">
+      <div style="height:100%;width:${s.pct}%;background:${stage==='done'?'var(--acc)':'var(--priml)'};transition:width .4s ease;border-radius:1px"></div>
+    </div>`;
+}
+
 async function genPortrait(){
   const char=getChars().find(c=>c.id===curCharId);if(!char)return;
   const s=getSettings();
@@ -1522,10 +1553,9 @@ async function genPortrait(){
   btn.disabled=true;btn.classList.add('loading');
   try{
     const seed=seedLocked&&seedVal?parseInt(seedVal):Math.floor(Math.random()*2147483647);
-    if(stEl)stEl.textContent=s.orKey?'Building AI prompt…':'Building prompt…';
+    setGenStage(stEl,'prompt',s.orKey?'Building AI prompt…':'Building prompt…');
     const prompt=await buildPrompt(char,activePose,activeClothing,activeState,activeToggles,s.orKey);
-    if(stEl)stEl.textContent='Generating portrait…';
-    const imageData=await callVenice(prompt,seed,s.model,s.veniceKey);
+    const imageData=await callVenice(prompt,seed,s.model,s.veniceKey,(stage,detail)=>setGenStage(stEl,stage,detail));
     const rec={characterId:char.id,imageData,prompt,seed,model:s.model,poseLabel:activePose?.label||'',clothingLabel:activeClothing?.label||'',createdAt:Date.now()};
     await DB.add(rec);
     if(!seedLocked){seedVal=seed.toString();const i=$('seedInp');if(i)i.value=seedVal}
@@ -1533,14 +1563,13 @@ async function genPortrait(){
     renderCarousel(char);
     const crsl=$('crsl');if(crsl)crsl.scrollLeft=0;
     curCarIdx=0;
-    if(stEl)stEl.textContent=`✓ Generated · Seed: ${seed}`;
     toast('Portrait generated ✦');
   }catch(err){
     console.error(err);
     const msg=err.message||String(err)||'Unknown error';
     logError('Portrait generation',msg);
     toast('Generation failed: '+msg.slice(0,60));
-    if(stEl)stEl.textContent='Generation failed — check Error Log in Settings';
+    if(stEl)stEl.innerHTML=`<span style="color:#e05;font-size:11px">Failed — check Error Log in Settings</span>`;
   }finally{btn.disabled=false;btn.classList.remove('loading')}
 }
 
@@ -1572,13 +1601,84 @@ async function confirmDelChar(){
 
 // ── Wizard ──
 let wizData={};
+
+function wizSaveSession(){
+  try{
+    const state={
+      step:wizStep,
+      fields:{
+        wizAge:$('wizAge')?.value||'',
+        wizMeas:$('wizMeas')?.value||'',
+        wizFeat:$('wizFeat')?.value||'',
+        wizNotes:$('wizNotes')?.value||'',
+        wizName:$('wizName')?.value||'',
+        wizEthn:$('wizEthn')?.value||'',
+        wizHeight:$('wizHeight')?.value||'',
+        wizStoryRole:$('wizStoryRole')?.value||'',
+        wizDynamic:$('wizDynamic')?.value||'',
+      },
+      chips:{
+        wizGenderC:getChipV('wizGenderC'),
+        wizBodyC:getChipV('wizBodyC'),
+        wizBustC:getChipV('wizBustC'),
+        wizFaceC:getChipV('wizFaceC'),
+        wizEyeC:getChipV('wizEyeC'),
+        wizHairColC:getChipV('wizHairColC'),
+        wizHairLenC:getChipV('wizHairLenC'),
+        wizHairStC:getChipV('wizHairStC'),
+        wizTraitsC:getMulChipV('wizTraitsC'),
+      }
+    };
+    sessionStorage.setItem('gogo_wiz',JSON.stringify(state));
+  }catch(e){}
+}
+
+function wizClearSession(){
+  try{sessionStorage.removeItem('gogo_wiz')}catch(e){}
+}
+
+function wizRestoreSession(state){
+  // Text fields
+  Object.entries(state.fields||{}).forEach(([id,val])=>{
+    const el=$(id);if(el)el.value=val;
+  });
+  // Single-select chips
+  const singleChips=['wizGenderC','wizBodyC','wizBustC','wizFaceC','wizEyeC','wizHairColC','wizHairLenC','wizHairStC'];
+  singleChips.forEach(gid=>{
+    const val=state.chips?.[gid];if(!val)return;
+    const el=$(gid);if(!el)return;
+    el.querySelectorAll('.chip').forEach(c=>c.classList.toggle('sel',c.dataset.val===val));
+  });
+  // Multi-select chips (traits)
+  const traits=state.chips?.wizTraitsC||[];
+  const tc=$('wizTraitsC');
+  if(tc)tc.querySelectorAll('.chip').forEach(c=>c.classList.toggle('sel',traits.includes(c.dataset.val)));
+  // Bust group visibility
+  const gender=state.chips?.wizGenderC;
+  const bg=$('wizBustGrp');if(bg)bg.style.display=gender==='Male'?'none':'';
+}
+
 function openWizard(){
-  wizStep=0;wizData={};wizPortrait=null;
+  // Check for saved session
+  let savedState=null;
+  try{const raw=sessionStorage.getItem('gogo_wiz');if(raw)savedState=JSON.parse(raw)}catch(e){}
+
+  wizStep=savedState?.step||0;
+  wizData={};wizPortrait=null;
+
+  // Reset all fields first
   ['wizName','wizAge','wizMeas','wizFeat','wizNotes'].forEach(id=>{const e=$(id);if(e)e.value=''});
   ['wizGenderC','wizBodyC','wizBustC','wizFaceC','wizEyeC','wizHairColC','wizHairLenC','wizHairStC','wizTraitsC'].forEach(id=>{
     const el=$(id);if(!el)return;
     el.querySelectorAll('.chip').forEach((c,i)=>c.classList.toggle('sel',i===0&&id==='wizGenderC'));
   });
+
+  // Restore saved state if present
+  if(savedState){
+    wizRestoreSession(savedState);
+    toast('Resuming where you left off');
+  }
+
   const box=$('wizPortBox');
   if(box)box.innerHTML=`<div class="wGenOv" id="wGenOv"><div class="bigSpin"></div><p class="genHint" id="wGenHint">Building prompt…</p></div>`;
   updateWiz();openSheet('shWiz');
@@ -1601,12 +1701,13 @@ function updateWiz(){
 }
 
 function wizNext(){
+  wizSaveSession();
   if(wizStep===5){saveWizChar();return}
   wizStep=Math.min(wizStep+1,5);
   updateWiz();
   if(wizStep===4)wizGenPortrait();
 }
-function wizBack(){wizStep=Math.max(wizStep-1,0);updateWiz()}
+function wizBack(){wizSaveSession();wizStep=Math.max(wizStep-1,0);updateWiz()}
 
 async function wizGenPortrait(){
   const s=getSettings();
@@ -1614,14 +1715,13 @@ async function wizGenPortrait(){
   const btn=$('wizRegenBtn');if(btn)btn.disabled=true;
   const ov=$('wGenOv'),hint=$('wGenHint');
   if(ov)ov.classList.remove('gone');
-  if(hint)hint.textContent='Building prompt…';
+  if(hint)hint.textContent=s.orKey?'Building AI prompt…':'Building prompt…';
+  const onStage=(_stage,detail)=>{if(hint)hint.textContent=detail||'…'};
   try{
     const wc=gatherWizData();
-    if(hint)hint.textContent=s.orKey?'Building AI prompt…':'Generating…';
     const prompt=await buildPrompt(wc,null,null,null,{},s.orKey);
-    if(hint)hint.textContent='Generating portrait…';
     const seed=Math.floor(Math.random()*2147483647);
-    const imageData=await callVenice(prompt,seed,s.model,s.veniceKey);
+    const imageData=await callVenice(prompt,seed,s.model,s.veniceKey,onStage);
     wizPortrait={imageData,prompt,seed,model:s.model};
     if(ov)ov.classList.add('gone');
     const box=$('wizPortBox');
@@ -1654,6 +1754,7 @@ async function saveWizChar(){
   const char=gatherWizData();char.name=name;char.id=uid();char.createdAt=Date.now();
   const chars=getChars();chars.push(char);saveChars(chars);
   if(wizPortrait)await DB.add({characterId:char.id,imageData:wizPortrait.imageData,prompt:wizPortrait.prompt,seed:wizPortrait.seed,model:wizPortrait.model,poseLabel:'',clothingLabel:'',createdAt:Date.now()});
+  wizClearSession();
   closeSheet('shWiz');closeAllSheets();
   toast(`${name} added to gallery ✦`);
   setTimeout(()=>openChar(char.id),350);
@@ -1674,6 +1775,46 @@ function selChip(el,gid){$(gid).querySelectorAll('.chip').forEach(c=>c.classList
 function togChip(el){el.classList.toggle('sel')}
 
 // ── Settings ──
+const FALLBACK_MODELS=[
+  {id:'lustify-sdxl',name:'Lustify SDXL'},
+  {id:'hidream-i1-fast',name:'HiDream I1 Fast'},
+  {id:'seedream-3.0',name:'Seedream V5 Lite'},
+  {id:'seedream-2',name:'Seedream V4'},
+  {id:'fluently-xl-final',name:'Fluently XL'},
+  {id:'nai-banana-pro',name:'Nano Banana Pro'},
+];
+
+async function fetchVeniceModels(key){
+  const st=$('modelFetchSt'),sel=$('sModel');
+  if(!key){if(st)st.textContent='Add Venice key to load live models';return}
+  if(st)st.textContent='Loading models…';
+  try{
+    const resp=await fetch('https://api.venice.ai/api/v1/models?type=image',{
+      headers:{'Authorization':'Bearer '+key}
+    });
+    if(!resp.ok)throw new Error(resp.status);
+    const d=await resp.json();
+    const models=(d.data||[]).filter(m=>m.type==='image'&&!m.model_spec?.offline);
+    if(!models.length)throw new Error('empty');
+    const cur=sel.value;
+    sel.innerHTML=models.map(m=>{
+      const label=m.model_spec?.name||m.id;
+      return `<option value="${esc(m.id)}">${esc(label)}</option>`;
+    }).join('');
+    // Restore saved selection if still available
+    if([...sel.options].some(o=>o.value===cur))sel.value=cur;
+    else{sel.value=sel.options[0]?.value||'';saveSettingsNow();}
+    if(st)st.textContent=`${models.length} models loaded from Venice`;
+    setTimeout(()=>{if(st)st.textContent=''},3000);
+  }catch(e){
+    if(st)st.textContent='Could not load live models — using defaults';
+    // Ensure fallbacks are present if select got wiped
+    if(!sel.options.length){
+      sel.innerHTML=FALLBACK_MODELS.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
+    }
+  }
+}
+
 function syncSettings(){
   const s=getSettings();
   const vk=$('sVeniceKey'),ok=$('sOrKey'),m=$('sModel'),vb=$('versionBadge');
@@ -1683,6 +1824,7 @@ function syncSettings(){
   if(vb)vb.textContent='v'+VERSION;
   syncPinSettings();
   renderErrorLog();
+  fetchVeniceModels(s.veniceKey);
 }
 function saveSettingsNow(){
   LS.set('ps_settings',{
@@ -1703,6 +1845,12 @@ function setupPWA(){
 async function init(){
   setupPWA();
   await DB.ready;
+
+  // Request persistent storage — prevents browser silently evicting IndexedDB portraits
+  if(navigator.storage&&navigator.storage.persist){
+    navigator.storage.persist().catch(()=>{});
+  }
+
   $('scrChar').classList.add('right');
   $('scrSettings').classList.add('right');
   await renderGallery();
