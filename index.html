@@ -1067,7 +1067,10 @@ function showScreen(name){
     to.style.transition='none';to.classList.remove('right');
     raf(()=>{to.style.transition='';to.classList.remove('right');from.classList.add('left')});
   }
-  setTimeout(()=>{from.classList.remove('left','right');if(back)to.classList.remove('left')},320);
+  setTimeout(()=>{
+    if(back){to.classList.remove('left')}
+    else{from.classList.remove('left','right')}
+  },320);
   curScreen=name;
   if(name==='gallery')renderGallery();
   if(name==='settings')syncSettings();
