@@ -1,5 +1,5 @@
-// GoGo — Service Worker v1.0.0
-const CACHE = 'gogo-v1';
+// GoGo — Service Worker v1.0.1
+const CACHE = 'gogo-v2';
 const PRECACHE = [
   './index.html',
   './manifest.json',
