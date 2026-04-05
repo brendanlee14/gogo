@@ -814,9 +814,21 @@ const VERSION = '1.0.0';
 const MAX_LOG = 50;
 function getErrLog(){return LS.get('gogo_errlog',[])}
 function saveErrLog(l){LS.set('gogo_errlog',l)}
-function logError(ctx,msg){
+function serializeError(err){
+  if(typeof err === 'string') return err;
+  if(err instanceof Error){
+    let out = err.message || String(err);
+    if(err.cause) out += '\nCause: '+serializeError(err.cause);
+    if(err.stack) out += '\n'+err.stack.split('\n').slice(1,4).join('\n'); // top 3 stack frames
+    return out;
+  }
+  try{return JSON.stringify(err,null,2)}catch{return String(err)}
+}
+
+function logError(ctx,err){
+  const msg=serializeError(err);
   const l=getErrLog();
-  l.unshift({ts:Date.now(),ctx,msg:String(msg)});
+  l.unshift({ts:Date.now(),ctx,msg});
   if(l.length>MAX_LOG)l.length=MAX_LOG;
   saveErrLog(l);
   renderErrorLog();
@@ -828,7 +840,10 @@ function renderErrorLog(){
   el.innerHTML=l.map(e=>{
     const d=new Date(e.ts);
     const ts=d.toLocaleDateString()+' '+d.toLocaleTimeString();
-    return `<div style="padding:4px 0;border-bottom:1px solid var(--bdr)"><span style="color:var(--acc)">[${esc(ts)}]</span> <span style="color:var(--creamd)">${esc(e.ctx)}</span><br><span>${esc(e.msg)}</span></div>`;
+    return `<div style="padding:6px 0;border-bottom:1px solid var(--bdr)">
+      <div style="margin-bottom:3px"><span style="color:var(--acc)">[${esc(ts)}]</span> <span style="color:var(--creamd);font-weight:500">${esc(e.ctx)}</span></div>
+      <pre style="white-space:pre-wrap;word-break:break-all;font-family:var(--mono);font-size:10px;color:var(--cream);line-height:1.5;margin:0">${esc(e.msg)}</pre>
+    </div>`;
   }).join('');
 }
 function copyErrorLog(){
@@ -1575,7 +1590,7 @@ async function callVenice(prompt,seed,model,key,onStage){
     body:JSON.stringify({model:model||'lustify-sdxl',prompt,negative_prompt:NEG,width:832,height:1216,steps:25,cfg_scale:7.5,seed,safe_mode:false,return_binary:false})
   });
   onStage&&onStage('decoding','Decoding image…');
-  if(!resp.ok){const t=await resp.text();throw new Error(`Venice ${resp.status}: ${t.slice(0,120)}`)}
+  if(!resp.ok){const t=await resp.text();throw new Error(`Venice ${resp.status}: ${t}`)}
   const d=await resp.json();
   const elapsed=((Date.now()-t0)/1000).toFixed(1);
   const timing=d.timing;
@@ -1623,7 +1638,7 @@ async function genPortrait(){
     let seed;
     if(seedLocked&&seedVal){seed=parseInt(seedVal)}
     else if(char.faceSeed&&!seedLocked){seed=char.faceSeed}
-    else{seed=Math.floor(Math.random()*2147483647)}
+    else{seed=Math.floor(Math.random()*999999999)}
     setGenStage(stEl,'prompt',s.orKey?'Building AI prompt…':'Building prompt…');
     const prompt=await buildPrompt(char,activePose,activeClothing,activeState,activeToggles,s.orKey);
     const imageData=await callVenice(prompt,seed,s.model,s.veniceKey,(stage,detail)=>setGenStage(stEl,stage,detail));
@@ -1637,8 +1652,8 @@ async function genPortrait(){
     toast('Portrait generated ✦');
   }catch(err){
     console.error(err);
-    const msg=err.message||String(err)||'Unknown error';
-    logError('Portrait generation',msg);
+    logError('Portrait generation',err);
+    const msg=err.message||String(err);
     toast('Generation failed: '+msg.slice(0,60));
     if(stEl)stEl.innerHTML=`<span style="color:#e05;font-size:11px">Failed — check Error Log in Settings</span>`;
   }finally{btn.disabled=false;btn.classList.remove('loading')}
@@ -1699,7 +1714,7 @@ async function setFaceRef(portraitId){
       saveChars(chars);
       toast('Face description extracted ✦');
     }catch(e){
-      logError('Face prompt extraction',e.message||e);
+      logError('Face prompt extraction',e);
       char.facePrompt='';
       saveChars(chars);
     }
@@ -1902,7 +1917,7 @@ async function wizGenPortrait(){
   try{
     const wc=gatherWizData();
     const prompt=await buildPrompt(wc,null,null,null,{},s.orKey);
-    const seed=Math.floor(Math.random()*2147483647);
+    const seed=Math.floor(Math.random()*999999999);
     const imageData=await callVenice(prompt,seed,s.model,s.veniceKey,onStage);
     wizPortrait={imageData,prompt,seed,model:s.model};
     if(ov)ov.classList.add('gone');
@@ -1914,8 +1929,8 @@ async function wizGenPortrait(){
   }catch(err){
     console.error(err);
     if(ov)ov.classList.add('gone');
+    logError('Wizard portrait generation',err);
     const msg=err.message||String(err)||'Unknown error';
-    logError('Wizard portrait generation',msg);
     const eb=$('wizErrBox'),em=$('wizErrMsg');
     if(eb&&em){em.textContent=msg;eb.style.display='block'}
   }finally{if(btn)btn.disabled=false}
