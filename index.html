@@ -1409,31 +1409,34 @@ function renderDetail(char){
 // ── Pickers ──
 function openPose(){
   let h='';
-  for(const[cat,poses]of Object.entries(POSES)){
+  const cats=Object.keys(POSES);
+  cats.forEach((cat,ci)=>{
     h+=`<div class="pCat">${cat}</div>`;
-    poses.forEach((p,i)=>{
+    POSES[cat].forEach((p,i)=>{
       const sel=activePose&&activePose.label===p.label;
-      h+=`<div class="pOpt${sel?' sel':''}" onclick="selPose(${JSON.stringify(cat)},${i})"><div class="pOL">${p.label}</div><div class="pChk"></div></div>`;
+      h+=`<div class="pOpt${sel?' sel':''}" onclick="selPose(${ci},${i})"><div class="pOL">${p.label}</div><div class="pChk"></div></div>`;
     });
-  }
+  });
   $('poseBody').innerHTML=h;openSheet('shPose');
 }
-function selPose(cat,i){activePose=POSES[cat][i];closeSheet('shPose');const e=$('pvPose');if(e)e.textContent=activePose.label}
+function selPose(ci,i){const cat=Object.keys(POSES)[ci];activePose=POSES[cat][i];closeSheet('shPose');const e=$('pvPose');if(e)e.textContent=activePose.label}
 
 function openClothing(){
   let h='';
-  for(const[cat,items]of Object.entries(CLOTHING)){
+  const cats=Object.keys(CLOTHING);
+  cats.forEach((cat,ci)=>{
     h+=`<div class="pCat">${cat}</div>`;
-    items.forEach((item,i)=>{
+    CLOTHING[cat].forEach((item,i)=>{
       const sel=activeClothing&&activeClothing.label===item.label;
-      h+=`<div class="pOpt${sel?' sel':''}" onclick="selCloth(${JSON.stringify(cat)},${i})"><div class="pOL">${item.label}</div><div class="pChk"></div></div>`;
+      h+=`<div class="pOpt${sel?' sel':''}" onclick="selCloth(${ci},${i})"><div class="pOL">${item.label}</div><div class="pChk"></div></div>`;
     });
-  }
+  });
   $('clothBody').innerHTML=h;
   $('ccWrap').classList.remove('show');
   openSheet('shCloth');
 }
-function selCloth(cat,i){
+function selCloth(ci,i){
+  const cat=Object.keys(CLOTHING)[ci];
   const item=CLOTHING[cat][i];
   if(item.isCustom){$('ccWrap').classList.add('show');document.querySelectorAll('#clothBody .pOpt').forEach(e=>e.classList.remove('sel'));event.currentTarget.classList.add('sel');return}
   activeClothing={label:item.label,prompt:item.prompt};$('ccWrap').classList.remove('show');
@@ -1449,17 +1452,18 @@ function openState(){
   const char=getChars().find(c=>c.id===curCharId);
   const fem=!char||char.gender==='Female'||char.gender==='Non-binary';
   const list=fem?STATES_F:STATES_M;
-  $('stateBody').innerHTML=list.map(s=>{
+  $('stateBody').innerHTML=list.map((s,i)=>{
     const sel=activeState&&activeState.label===s.label;
-    return `<div class="pOpt${sel?' sel':''}" onclick="selState(${JSON.stringify(s.label)})"><div class="pOL">${s.label}</div><div class="pChk"></div></div>`;
+    return `<div class="pOpt${sel?' sel':''}" onclick="selState(${i})"><div class="pOL">${s.label}</div><div class="pChk"></div></div>`;
   }).join('');
   openSheet('shState');
 }
-function selState(label){
+function selState(i){
   const char=getChars().find(c=>c.id===curCharId);
   const fem=!char||char.gender==='Female'||char.gender==='Non-binary';
-  activeState=(fem?STATES_F:STATES_M).find(s=>s.label===label);
-  const e=$('pvState');if(e)e.textContent=label;closeSheet('shState');
+  const list=fem?STATES_F:STATES_M;
+  activeState=list[i];
+  const e=$('pvState');if(e)e.textContent=activeState.label;closeSheet('shState');
 }
 
 // ── Toggles & Seed ──
