@@ -170,6 +170,30 @@ textarea.fi{resize:none;line-height:1.5}
 .fsInfo{position:absolute;bottom:calc(20px + var(--sb));left:20px;right:20px;display:flex;justify-content:space-between;align-items:flex-end}
 .fsSeedL{font-size:11px;color:rgba(255,255,255,.5);font-variant-numeric:tabular-nums}
 .fsDelBtn{padding:7px 14px;border-radius:20px;background:rgba(180,30,50,.4);border:1px solid rgba(180,30,50,.5);color:#fff;font-size:12px;cursor:pointer;font-family:var(--sans)}
+
+/* Face reference */
+.fsRefBtn{padding:7px 14px;border-radius:20px;background:rgba(200,164,74,.15);border:1px solid rgba(200,164,74,.4);color:var(--acc);font-size:12px;cursor:pointer;font-family:var(--sans);transition:all .2s}
+.fsRefBtn.active{background:rgba(200,164,74,.35);border-color:var(--acc);color:#fff}
+.faceRefBadge{
+  position:absolute;top:10px;left:10px;
+  background:rgba(200,164,74,.9);color:#000;
+  font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  padding:4px 10px;border-radius:12px;pointer-events:none;
+  display:flex;align-items:center;gap:5px;
+}
+.faceRefBadge svg{width:11px;height:11px}
+.faceRefCard{
+  background:rgba(200,164,74,.08);border:1px solid rgba(200,164,74,.25);
+  border-radius:var(--rs);padding:10px 14px;margin-bottom:12px;
+  display:flex;align-items:center;gap:12px;
+}
+.faceRefThumb{width:44px;height:60px;border-radius:6px;object-fit:cover;flex-shrink:0;border:1px solid rgba(200,164,74,.3)}
+.faceRefThumbPh{width:44px;height:60px;border-radius:6px;background:var(--sf2);flex-shrink:0;display:flex;align-items:center;justify-content:center;border:1px solid var(--bdr)}
+.faceRefInfo{flex:1;min-width:0}
+.faceRefLabel{font-size:10px;color:var(--acc);text-transform:uppercase;letter-spacing:.1em;font-weight:600;margin-bottom:2px}
+.faceRefDesc{font-size:12px;color:var(--creamd);line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.faceRefActions{display:flex;gap:6px;flex-shrink:0}
+.faceRefExtract{font-size:11px;color:var(--muted);margin-top:6px;font-style:italic;min-height:16px}
 .mWrap{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:400;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .22s}
 .mWrap.open{opacity:1;pointer-events:all}
 .mBox{width:100%;max-width:340px;background:var(--sf2);border:1px solid var(--bdrl);border-radius:var(--r);padding:22px}
@@ -658,7 +682,17 @@ textarea.fi{resize:none;line-height:1.5}
 <div id="portFS">
   <img id="fsImg" src="" alt="Portrait">
   <div class="fsClose" onclick="closeFS()"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:18px;height:18px"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></div>
-  <div class="fsInfo"><span class="fsSeedL" id="fsSeed"></span><button class="fsDelBtn" id="fsDelBtn">Delete portrait</button></div>
+  <div id="fsFaceRefBadge" class="faceRefBadge" style="display:none">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.562.562 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg>
+    Face Reference
+  </div>
+  <div class="fsInfo">
+    <span class="fsSeedL" id="fsSeed"></span>
+    <div style="display:flex;gap:8px">
+      <button class="fsRefBtn" id="fsRefBtn" onclick="toggleFaceRef()">☆ Set as Face</button>
+      <button class="fsDelBtn" id="fsDelBtn">Delete</button>
+    </div>
+  </div>
 </div>
 
 <!-- PRESET MODAL -->
@@ -1266,6 +1300,7 @@ async function openChar(id){
   showScreen('character');
   renderCarousel(char);
   renderDetail(char);
+  loadFaceRefThumb(char);
 }
 
 function renderCarousel(char){
@@ -1274,8 +1309,21 @@ function renderCarousel(char){
     crsl.innerHTML=`<div class="crslSlide"><div class="crslPh"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><p>No portraits yet — generate one below</p></div></div>`;
     dots.innerHTML='';return;
   }
-  crsl.innerHTML=curPortraits.map((p,i)=>`<div class="crslSlide" onclick="openFS(${p.id})"><img src="${imgSrc(p.imageData)}" loading="lazy" alt="Portrait ${i+1}"></div>`).join('');
-  dots.innerHTML=curPortraits.map((_,i)=>`<div class="dot${i===0?' on':''}"></div>`).join('');
+  // Pin face reference portrait first
+  const faceRefId=char.faceRefPortraitId;
+  const sorted=[...curPortraits].sort((a,b)=>{
+    if(a.id===faceRefId)return -1;
+    if(b.id===faceRefId)return 1;
+    return 0;
+  });
+  crsl.innerHTML=sorted.map((p,i)=>{
+    const isRef=p.id===faceRefId;
+    return `<div class="crslSlide" onclick="openFS(${p.id})" style="position:relative">
+      <img src="${imgSrc(p.imageData)}" loading="lazy" alt="Portrait ${i+1}">
+      ${isRef?`<div class="faceRefBadge"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.562.562 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg>Face Reference</div>`:''}
+    </div>`;
+  }).join('');
+  dots.innerHTML=sorted.map((_,i)=>`<div class="dot${i===0?' on':''}"></div>`).join('');
   crsl.onscroll=null;
   crsl.addEventListener('scroll',()=>{
     const i=Math.round(crsl.scrollLeft/window.innerWidth);
@@ -1307,6 +1355,19 @@ function renderDetail(char){
       ${char.personality?.notes?`<div class="infoRow"><span class="iKey">Notes</span><span class="iVal">${esc(char.personality.notes)}</span></div>`:''}
     </div>
     <div class="sHead">Generate Portrait</div>
+    ${char.faceRefPortraitId?`
+    <div class="faceRefCard" id="faceRefCard">
+      <div class="faceRefThumbPh" id="faceRefThumb">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:20px;height:20px;color:var(--acc);opacity:.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+      </div>
+      <div class="faceRefInfo">
+        <div class="faceRefLabel">★ Face Reference Active</div>
+        <div class="faceRefDesc" id="faceRefDesc">${esc(char.facePrompt||'Seed locked — face consistency active')}</div>
+      </div>
+      <div class="faceRefActions">
+        <button class="seedBtn" style="font-size:11px;padding:7px 10px" onclick="clearFaceRef()">Clear</button>
+      </div>
+    </div>`:''}
     <div class="pickerRow">
       <button class="pickerBtn" onclick="openPose()"><div><span class="pbLbl">Pose</span><span class="pbVal" id="pvPose">${activePose?esc(activePose.label):'Choose pose...'}</span></div><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button>
     </div>
@@ -1494,8 +1555,14 @@ ${fem&&clothing&&(clothing.label==='Nude'||clothing.label==='Topless')?'Add: bre
 }
 
 async function buildPrompt(char,pose,clothing,state,toggles,orKey){
-  if(orKey){try{const p=await buildPromptOR(char,pose,clothing,state,toggles,orKey);if(p)return p}catch(e){console.warn('OR failed:',e)}}
-  return buildFallback(char,pose,clothing,state,toggles);
+  let prompt='';
+  if(orKey){try{prompt=await buildPromptOR(char,pose,clothing,state,toggles,orKey)}catch(e){console.warn('OR failed:',e)}}
+  if(!prompt)prompt=buildFallback(char,pose,clothing,state,toggles);
+  // Prepend face reference at high weight if set
+  if(char.facePrompt){
+    prompt=`(${char.facePrompt}:1.35), `+prompt;
+  }
+  return prompt;
 }
 
 // ── Venice API ──
@@ -1552,7 +1619,11 @@ async function genPortrait(){
   const btn=$('genBtn'),stEl=$('promptSt');
   btn.disabled=true;btn.classList.add('loading');
   try{
-    const seed=seedLocked&&seedVal?parseInt(seedVal):Math.floor(Math.random()*2147483647);
+    // Seed priority: manual lock > faceSeed > random
+    let seed;
+    if(seedLocked&&seedVal){seed=parseInt(seedVal)}
+    else if(char.faceSeed&&!seedLocked){seed=char.faceSeed}
+    else{seed=Math.floor(Math.random()*2147483647)}
     setGenStage(stEl,'prompt',s.orKey?'Building AI prompt…':'Building prompt…');
     const prompt=await buildPrompt(char,activePose,activeClothing,activeState,activeToggles,s.orKey);
     const imageData=await callVenice(prompt,seed,s.model,s.veniceKey,(stage,detail)=>setGenStage(stEl,stage,detail));
@@ -1580,9 +1651,120 @@ async function openFS(id){
   $('fsImg').src=imgSrc(p.imageData);
   $('fsSeed').textContent=p.seed?`Seed: ${p.seed}`:'';
   $('fsDelBtn').onclick=delFsPortrait;
+  // Face ref state
+  const char=getChars().find(c=>c.id===curCharId);
+  const isRef=char&&char.faceRefPortraitId===id;
+  const refBtn=$('fsRefBtn'),badge=$('fsFaceRefBadge');
+  if(refBtn){refBtn.textContent=isRef?'★ Face Reference':'☆ Set as Face';refBtn.classList.toggle('active',isRef)}
+  if(badge)badge.style.display=isRef?'flex':'none';
   $('portFS').classList.add('open');
 }
 function closeFS(){$('portFS').classList.remove('open');curFsId=null}
+
+// ── Face Reference ──
+async function toggleFaceRef(){
+  if(!curFsId||!curCharId)return;
+  const chars=getChars();
+  const char=chars.find(c=>c.id===curCharId);if(!char)return;
+  if(char.faceRefPortraitId===curFsId){
+    // Already the ref — clear it
+    clearFaceRef();return;
+  }
+  await setFaceRef(curFsId);
+}
+
+async function setFaceRef(portraitId){
+  const chars=getChars();
+  const char=chars.find(c=>c.id===curCharId);if(!char)return;
+  const p=await DB.get(portraitId);if(!p)return;
+
+  // Store face seed
+  char.faceRefPortraitId=portraitId;
+  char.faceSeed=p.seed;
+
+  // Update UI immediately
+  const refBtn=$('fsRefBtn'),badge=$('fsFaceRefBadge');
+  if(refBtn){refBtn.textContent='★ Face Reference';refBtn.classList.add('active')}
+  if(badge)badge.style.display='flex';
+
+  // Save now so seed is persisted even if extract fails
+  saveChars(chars);
+  toast('Face reference set — extracting face description…');
+
+  // Extract face prompt via OpenRouter (async, non-blocking)
+  const s=getSettings();
+  if(s.orKey&&p.prompt){
+    try{
+      char.facePrompt=await extractFacePrompt(p.prompt,char,s.orKey);
+      saveChars(chars);
+      toast('Face description extracted ✦');
+    }catch(e){
+      logError('Face prompt extraction',e.message||e);
+      char.facePrompt='';
+      saveChars(chars);
+    }
+  } else {
+    char.facePrompt='';
+    saveChars(chars);
+  }
+
+  // Re-render detail to show face ref card with thumb
+  curPortraits=await DB.forChar(curCharId);
+  renderCarousel(char);
+  renderDetail(char);
+  loadFaceRefThumb(char);
+}
+
+async function extractFacePrompt(sourcePrompt,char,orKey){
+  const sys=`You are a Stable Diffusion prompt specialist. Extract ONLY the facial and physical identity tags from the given SD prompt. Output a compact comma-separated list of tags describing: face shape, eye shape and colour, nose, lips, jaw, skin tone, distinctive facial features. Do NOT include hair colour, body, clothing, pose, expression, or quality tags. Keep it under 30 tags. Output tags only — no explanation.`;
+  const usr=`Extract face identity tags from this prompt:\n${sourcePrompt}`;
+  const resp=await fetch('https://openrouter.ai/api/v1/chat/completions',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+orKey},
+    body:JSON.stringify({model:'openai/gpt-4o-mini',messages:[{role:'system',content:sys},{role:'user',content:usr}],stream:true,max_tokens:200})
+  });
+  if(!resp.ok)throw new Error('OR '+resp.status);
+  const reader=resp.body.getReader(),dec=new TextDecoder();
+  let result='';
+  while(true){
+    const{done,value}=await reader.read();if(done)break;
+    for(const line of dec.decode(value).split('\n')){
+      if(line.startsWith('data: ')&&line!=='data: [DONE]'){
+        try{result+=(JSON.parse(line.slice(6)).choices?.[0]?.delta?.content||'')}catch{}
+      }
+    }
+  }
+  return result.trim();
+}
+
+function clearFaceRef(){
+  const chars=getChars();
+  const char=chars.find(c=>c.id===curCharId);if(!char)return;
+  delete char.faceRefPortraitId;
+  delete char.faceSeed;
+  delete char.facePrompt;
+  saveChars(chars);
+  // Update fullscreen button if open
+  const refBtn=$('fsRefBtn'),badge=$('fsFaceRefBadge');
+  if(refBtn){refBtn.textContent='☆ Set as Face';refBtn.classList.remove('active')}
+  if(badge)badge.style.display='none';
+  // Re-render
+  renderCarousel(char);
+  renderDetail(char);
+  toast('Face reference cleared');
+}
+
+async function loadFaceRefThumb(char){
+  if(!char.faceRefPortraitId)return;
+  const p=await DB.get(char.faceRefPortraitId);if(!p)return;
+  const el=$('faceRefThumb');if(!el)return;
+  const img=document.createElement('img');
+  img.src=imgSrc(p.imageData);
+  img.className='faceRefThumb';
+  el.replaceWith(img);
+}
+
+
 async function delFsPortrait(){
   if(!curFsId)return;await DB.del(curFsId);closeFS();
   const char=getChars().find(c=>c.id===curCharId);
