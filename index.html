@@ -539,24 +539,44 @@ textarea.fi{resize:none;line-height:1.5}
       <div class="fg">
         <label class="fl">Eye Color</label>
         <div class="chips" id="wizEyeC">
-          <div class="chip" data-val="brown eyes" onclick="selChip(this,'wizEyeC')">Brown</div>
-          <div class="chip" data-val="blue eyes" onclick="selChip(this,'wizEyeC')">Blue</div>
-          <div class="chip" data-val="green eyes" onclick="selChip(this,'wizEyeC')">Green</div>
+          <div class="chip" data-val="dark brown eyes" onclick="selChip(this,'wizEyeC')">Dark Brown</div>
+          <div class="chip" data-val="light brown eyes" onclick="selChip(this,'wizEyeC')">Light Brown</div>
+          <div class="chip" data-val="amber eyes" onclick="selChip(this,'wizEyeC')">Amber</div>
           <div class="chip" data-val="hazel eyes" onclick="selChip(this,'wizEyeC')">Hazel</div>
+          <div class="chip" data-val="green eyes" onclick="selChip(this,'wizEyeC')">Green</div>
+          <div class="chip" data-val="blue eyes" onclick="selChip(this,'wizEyeC')">Blue</div>
+          <div class="chip" data-val="light blue eyes, pale blue eyes" onclick="selChip(this,'wizEyeC')">Ice Blue</div>
           <div class="chip" data-val="grey eyes" onclick="selChip(this,'wizEyeC')">Grey</div>
-          <div class="chip" data-val="dark eyes" onclick="selChip(this,'wizEyeC')">Dark</div>
+          <div class="chip" data-val="blue-grey eyes" onclick="selChip(this,'wizEyeC')">Blue-Grey</div>
+          <div class="chip" data-val="grey-green eyes" onclick="selChip(this,'wizEyeC')">Grey-Green</div>
+          <div class="chip" data-val="dark eyes, black eyes" onclick="selChip(this,'wizEyeC')">Black</div>
+          <div class="chip" data-val="violet eyes, purple eyes" onclick="selChip(this,'wizEyeC')">Violet</div>
+          <div class="chip" data-val="heterochromia, different colored eyes" onclick="selChip(this,'wizEyeC')">Heterochromia</div>
         </div>
       </div>
       <div class="fg">
         <label class="fl">Hair Color</label>
         <div class="chips" id="wizHairColC">
+          <div class="chip" data-val="jet black hair" onclick="selChip(this,'wizHairColC')">Jet Black</div>
           <div class="chip" data-val="black hair" onclick="selChip(this,'wizHairColC')">Black</div>
-          <div class="chip" data-val="dark brown hair" onclick="selChip(this,'wizHairColC')">Dark Brown</div>
-          <div class="chip" data-val="light brown hair" onclick="selChip(this,'wizHairColC')">Light Brown</div>
-          <div class="chip" data-val="blonde hair" onclick="selChip(this,'wizHairColC')">Blonde</div>
-          <div class="chip" data-val="red hair" onclick="selChip(this,'wizHairColC')">Red</div>
-          <div class="chip" data-val="auburn hair" onclick="selChip(this,'wizHairColC')">Auburn</div>
-          <div class="chip" data-val="silver hair" onclick="selChip(this,'wizHairColC')">Silver</div>
+          <div class="chip" data-val="dark brown hair, espresso hair" onclick="selChip(this,'wizHairColC')">Dark Brown</div>
+          <div class="chip" data-val="medium brown hair, chestnut hair" onclick="selChip(this,'wizHairColC')">Chestnut</div>
+          <div class="chip" data-val="light brown hair, caramel hair" onclick="selChip(this,'wizHairColC')">Caramel</div>
+          <div class="chip" data-val="dirty blonde hair, dark blonde hair" onclick="selChip(this,'wizHairColC')">Dirty Blonde</div>
+          <div class="chip" data-val="blonde hair, golden blonde hair" onclick="selChip(this,'wizHairColC')">Golden Blonde</div>
+          <div class="chip" data-val="platinum blonde hair, white blonde hair" onclick="selChip(this,'wizHairColC')">Platinum</div>
+          <div class="chip" data-val="strawberry blonde hair" onclick="selChip(this,'wizHairColC')">Strawberry Blonde</div>
+          <div class="chip" data-val="auburn hair, warm red-brown hair" onclick="selChip(this,'wizHairColC')">Auburn</div>
+          <div class="chip" data-val="red hair, copper hair" onclick="selChip(this,'wizHairColC')">Red / Copper</div>
+          <div class="chip" data-val="burgundy hair, dark red hair" onclick="selChip(this,'wizHairColC')">Burgundy</div>
+          <div class="chip" data-val="silver hair, grey hair" onclick="selChip(this,'wizHairColC')">Silver / Grey</div>
+          <div class="chip" data-val="white hair" onclick="selChip(this,'wizHairColC')">White</div>
+          <div class="chip" data-val="pastel pink hair" onclick="selChip(this,'wizHairColC')">Pastel Pink</div>
+          <div class="chip" data-val="pink hair" onclick="selChip(this,'wizHairColC')">Pink</div>
+          <div class="chip" data-val="purple hair, violet hair" onclick="selChip(this,'wizHairColC')">Purple</div>
+          <div class="chip" data-val="blue hair, ocean blue hair" onclick="selChip(this,'wizHairColC')">Blue</div>
+          <div class="chip" data-val="ombre hair, two-tone hair" onclick="selChip(this,'wizHairColC')">Ombré</div>
+          <div class="chip" data-val="highlighted hair, balayage" onclick="selChip(this,'wizHairColC')">Highlights</div>
         </div>
       </div>
       <div class="fg">
@@ -1513,47 +1533,73 @@ function delPreset(e,id){
 // ── Prompt Building ──
 function buildFallback(char,pose,clothing,state,toggles){
   const fem=char.gender==='Female'||char.gender==='Non-binary';
-  const parts=['score_9, score_8_up, score_7_up, masterpiece, (photorealistic:1.3), ultra detailed, 8k'];
-  const ethMap={'Caucasian / White':'caucasian woman','East Asian':'east asian woman','South Asian':'south asian woman, indian woman',
-    'Southeast Asian':'southeast asian woman','Black / African':'black woman','Hispanic / Latina':'hispanic woman, latina',
-    'Middle Eastern':'middle eastern woman','Mixed / Multiracial':'mixed race woman'};
-  parts.push(ethMap[char.ethnicity]||(fem?'beautiful woman':'handsome man'));
+  const parts=[];
+
+  // 1. Quality anchors
+  parts.push('score_9, score_8_up, score_7_up, masterpiece, (photorealistic:1.3), ultra detailed, 8k');
+
+  // 2. Pose FIRST — highest positional weight after quality tags
+  if(pose)parts.push(`(${pose.prompt}:1.15)`);
+
+  // 3. Camera / framing
+  if(fem)parts.push('facing camera, front view, looking at viewer');
+
+  // 4. Subject identity
+  const ethMap={
+    'Caucasian / White':'caucasian','East Asian':'east asian','South Asian':'south asian, indian',
+    'Southeast Asian':'southeast asian','Black / African':'black','Hispanic / Latina':'hispanic, latina',
+    'Middle Eastern':'middle eastern','Mixed / Multiracial':'mixed race',
+    'British / English':'british','French':'french','German / Austrian / Swiss':'german',
+    'Italian':'italian','Spanish / Catalan':'spanish','Japanese':'japanese','Korean':'korean',
+    'Chinese / Han':'chinese','Filipino / Filipina':'filipino','Thai':'thai','Vietnamese':'vietnamese',
+    'Brazilian / Euro-Brazilian':'brazilian','African American / Black American':'black american',
+  };
+  const eth=ethMap[char.ethnicity]||'';
+  parts.push(`${eth} ${fem?'woman':'man'}`.trim());
   if(char.age)parts.push(char.age+' years old');
+
+  // 5. Physical
   if(char.face){
-    ['faceShape','eyeColor','hairColor','hairLength','hairStyle','features'].forEach(k=>{if(char.face[k])parts.push(char.face[k])});
+    ['faceShape','eyeColor','hairColor','hairLength','hairStyle','features'].forEach(k=>{
+      if(char.face[k])parts.push(char.face[k]);
+    });
   }
   if(char.build){
     if(char.build.bodyType)parts.push(char.build.bodyType.toLowerCase());
     if(fem&&char.build.breastSize)parts.push(char.build.breastSize.toLowerCase());
   }
-  if(fem)parts.push('facing camera, front view, looking at viewer');
+
+  // 6. Clothing
   if(clothing)parts.push(clothing.prompt);
-  if(pose)parts.push(pose.prompt);
+
+  // 7. State / expression
   if(state)parts.push(state.prompt);
+
+  // 8. Modifiers
   if(fem){
     if(toggles.sheer)parts.push('sheer fabric, see-through material');
-    if(toggles.hardNipples)parts.push('hard nipples, erect nipples, visible through fabric');
+    if(toggles.hardNipples)parts.push('hard nipples, erect nipples');
     if(clothing&&(clothing.label==='Nude'||clothing.label==='Topless'))parts.push('breasts visible, bare breasts');
   }else{
     if(toggles.erect)parts.push('erect penis, hard cock');
     if(toggles.holding)parts.push('holding penis, hand on cock');
   }
-  parts.push('solo, high resolution, beautiful lighting, professional photography');
+
+  parts.push('solo, beautiful lighting, professional photography, high resolution');
   return parts.filter(Boolean).join(', ');
 }
 
 async function buildPromptOR(char,pose,clothing,state,toggles,orKey){
   const fem=char.gender==='Female'||char.gender==='Non-binary';
-  const sys=`You are a Stable Diffusion prompt engineer. Given character details, output ONLY a comma-separated SD tag list. No sentences, no explanation, just tags. Start with: score_9, score_8_up, score_7_up, masterpiece, (photorealistic:1.3), ultra detailed, 8k. ${fem?'Always include: facing camera, front view, looking at viewer, solo':'Always include: facing camera, looking at viewer, solo'}.`;
+  const sys=`You are a Stable Diffusion prompt engineer. Given character details, output ONLY a comma-separated SD tag list. Rules: 1) Start with quality tags: score_9, score_8_up, score_7_up, masterpiece, (photorealistic:1.3), ultra detailed, 8k. 2) IMMEDIATELY after quality tags, add the POSE wrapped in weight brackets: (pose tags:1.15) — this is critical for pose adherence. 3) Then add camera angle: ${fem?'facing camera, front view, looking at viewer':'facing camera, looking at viewer'}. 4) Then character physical description. 5) Then clothing. 6) Then expression/state. 7) End with: solo, beautiful lighting, professional photography. No sentences, no explanation, just comma-separated tags.`;
   const usr=`Character: ${JSON.stringify({name:char.name,gender:char.gender,age:char.age,ethnicity:char.ethnicity,build:char.build,face:char.face})}
+Pose (MUST be second after quality tags, weighted): ${pose?pose.prompt:'standing neutral'}
 Clothing: ${clothing?clothing.prompt:'tasteful default'}
-Pose: ${pose?pose.prompt:'standing neutral'}
 Expression: ${state?state.prompt:'neutral'}
 ${fem&&toggles.hardNipples?'Add: hard nipples, erect nipples':''}
 ${fem&&toggles.sheer?'Add: sheer fabric, see-through':''}
 ${!fem&&toggles.erect?'Add: erect penis':''}
-${fem&&clothing&&(clothing.label==='Nude'||clothing.label==='Topless')?'Add: breasts visible, bare breasts':''}`;
-
+${fem&&clothing&&(clothing.label==='Nude'||clothing.label==='Topless')?'Add: breasts visible, bare breasts':''}`.trim();
   const resp=await fetch('https://openrouter.ai/api/v1/chat/completions',{
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+orKey},
@@ -1577,21 +1623,33 @@ async function buildPrompt(char,pose,clothing,state,toggles,orKey){
   let prompt='';
   if(orKey){try{prompt=await buildPromptOR(char,pose,clothing,state,toggles,orKey)}catch(e){console.warn('OR failed:',e)}}
   if(!prompt)prompt=buildFallback(char,pose,clothing,state,toggles);
-  // Prepend face reference at high weight if set
+  // Prepend face reference at moderate weight — kept lower than pose to avoid crowding it out
   if(char.facePrompt){
-    prompt=`(${char.facePrompt}:1.35), `+prompt;
+    prompt=`(${char.facePrompt}:1.2), `+prompt;
   }
   return prompt;
 }
 
 // ── Venice API ──
-async function callVenice(prompt,seed,model,key,onStage){
-  onStage&&onStage('queued','Queued — waiting for Venice…');
+function isBlackImage(b64){
+  // Decode first ~2KB and check if all pixels are near-black
+  try{
+    const bin=atob(b64.slice(0,2048));
+    // PNG: after header+IHDR, IDAT chunk contains pixel data — check raw bytes are not all zero
+    // Simpler heuristic: if >95% of sampled bytes are 0x00, it's a black image
+    let zeros=0;
+    for(let i=0;i<bin.length;i++){if(bin.charCodeAt(i)===0)zeros++}
+    return zeros/bin.length>0.92;
+  }catch{return false}
+}
+
+async function callVenice(prompt,seed,model,key,onStage,_retry=false){
+  onStage&&onStage('queued',_retry?'Retrying…':'Queued — waiting for Venice…');
   const t0=Date.now();
   const resp=await fetch('https://api.venice.ai/api/v1/image/generate',{
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-    body:JSON.stringify({model:model||'lustify-sdxl',prompt,negative_prompt:NEG,width:832,height:1216,steps:25,cfg_scale:7.5,seed,safe_mode:false,return_binary:false})
+    body:JSON.stringify({model:model||'lustify-sdxl',prompt,negative_prompt:NEG,width:832,height:1216,steps:30,cfg_scale:7.5,seed,safe_mode:false,return_binary:false})
   });
   onStage&&onStage('decoding','Decoding image…');
   if(!resp.ok){const t=await resp.text();throw new Error(`Venice ${resp.status}: ${t}`)}
@@ -1602,13 +1660,23 @@ async function callVenice(prompt,seed,model,key,onStage){
   if(d.images?.[0]){const i=d.images[0];b64=typeof i==='string'?i:i.url||i.b64_json}
   else if(d.data?.[0]){const i=d.data[0];b64=i.b64_json||i.url}
   if(!b64)throw new Error('Unexpected Venice response');
+  b64=b64.replace(/^data:image\/\w+;base64,/,'');
+  // Black image detection — auto-retry once with a fresh seed
+  if(isBlackImage(b64)){
+    if(!_retry){
+      const newSeed=Math.floor(Math.random()*999999999);
+      onStage&&onStage('queued','Black image detected — retrying with new seed…');
+      return callVenice(prompt,newSeed,model,key,onStage,true);
+    }
+    throw new Error('Black image returned twice — model may be overloaded, try again shortly');
+  }
   const inferMs=timing?.inferenceDuration;
   const queueMs=timing?.inferenceQueueTime;
   const doneMsg=inferMs
     ?`✓ Done in ${elapsed}s (queue ${(queueMs/1000).toFixed(1)}s, render ${(inferMs/1000).toFixed(1)}s)`
     :`✓ Done in ${elapsed}s`;
   onStage&&onStage('done',doneMsg);
-  return b64.replace(/^data:image\/\w+;base64,/,'');
+  return b64;
 }
 
 // ── Generate Portrait ──
@@ -1976,14 +2044,22 @@ function selChip(el,gid){$(gid).querySelectorAll('.chip').forEach(c=>c.classList
 function togChip(el){el.classList.toggle('sel')}
 
 // ── Settings ──
+// Models known to support explicit/uncensored content
+const EXPLICIT_MODELS=new Set(['lustify-sdxl','fluently-xl-final','nai-banana-pro','pony-realism','realistic-vision','dreamshaper-xl']);
+
 const FALLBACK_MODELS=[
-  {id:'lustify-sdxl',name:'Lustify SDXL'},
-  {id:'hidream-i1-fast',name:'HiDream I1 Fast'},
-  {id:'seedream-3.0',name:'Seedream V5 Lite'},
-  {id:'seedream-2',name:'Seedream V4'},
-  {id:'fluently-xl-final',name:'Fluently XL'},
-  {id:'nai-banana-pro',name:'Nano Banana Pro'},
+  {id:'lustify-sdxl',name:'Lustify SDXL',explicit:true},
+  {id:'hidream-i1-fast',name:'HiDream I1 Fast',explicit:false},
+  {id:'seedream-3.0',name:'Seedream V5 Lite',explicit:false},
+  {id:'seedream-2',name:'Seedream V4',explicit:false},
+  {id:'fluently-xl-final',name:'Fluently XL',explicit:true},
+  {id:'nai-banana-pro',name:'Nano Banana Pro',explicit:true},
 ];
+
+function modelLabel(id,name){
+  const isEx=EXPLICIT_MODELS.has(id)||id.includes('lustify')||id.includes('fluently')||id.includes('pony')||id.includes('banana');
+  return isEx?`🔞 ${name}`:`${name}`;
+}
 
 async function fetchVeniceModels(key){
   const st=$('modelFetchSt'),sel=$('sModel');
@@ -1999,19 +2075,17 @@ async function fetchVeniceModels(key){
     if(!models.length)throw new Error('empty');
     const cur=sel.value;
     sel.innerHTML=models.map(m=>{
-      const label=m.model_spec?.name||m.id;
-      return `<option value="${esc(m.id)}">${esc(label)}</option>`;
+      const name=m.model_spec?.name||m.id;
+      return `<option value="${esc(m.id)}">${esc(modelLabel(m.id,name))}</option>`;
     }).join('');
-    // Restore saved selection if still available
     if([...sel.options].some(o=>o.value===cur))sel.value=cur;
     else{sel.value=sel.options[0]?.value||'';saveSettingsNow();}
-    if(st)st.textContent=`${models.length} models loaded from Venice`;
-    setTimeout(()=>{if(st)st.textContent=''},3000);
+    if(st)st.textContent=`${models.length} models loaded · 🔞 = explicit capable`;
+    setTimeout(()=>{if(st)st.textContent='🔞 = supports explicit content'},4000);
   }catch(e){
     if(st)st.textContent='Could not load live models — using defaults';
-    // Ensure fallbacks are present if select got wiped
     if(!sel.options.length){
-      sel.innerHTML=FALLBACK_MODELS.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
+      sel.innerHTML=FALLBACK_MODELS.map(m=>`<option value="${m.id}">${esc(modelLabel(m.id,m.name))}</option>`).join('');
     }
   }
 }
