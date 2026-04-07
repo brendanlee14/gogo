@@ -50,7 +50,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--cream);fo
 .card-ov{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(8,4,6,.93) 38%);padding:28px 12px 12px}
 .card-name{font-family:var(--sans);font-size:16px;font-weight:700;letter-spacing:-.01em;text-shadow:0 1px 6px rgba(0,0,0,.9)}
 .card-role{font-size:10px;color:var(--acc);text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
-.cntB{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:3px 9px;font-size:11px;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:4px}
+.cnt-badge{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:3px 9px;font-size:11px;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:4px}
 .empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:48px 32px;text-align:center}
 .emptyIcon{font-size:52px;opacity:.25}
 .empty h2{font-family:var(--sans);font-size:24px;font-weight:700;letter-spacing:-.02em;color:var(--creamd)}
@@ -58,6 +58,27 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--cream);fo
 .fab{position:fixed;bottom:calc(20px + var(--sb));right:18px;width:54px;height:54px;border-radius:50%;background:linear-gradient(140deg,var(--prim),var(--priml));border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 24px rgba(125,26,43,.55);transition:transform .15s;z-index:90}
 .fab:active{transform:scale(.9)}
 .fab svg{width:24px;height:24px;stroke-width:2}
+/* ── Gallery toolbar ── */
+.gToolbar{display:flex;gap:8px;padding:10px 14px 2px;flex-shrink:0}
+.gSearchWrap{flex:1;position:relative}
+.gSearchWrap svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--muted);pointer-events:none;flex-shrink:0}
+.gSearchInput{width:100%;background:var(--sf2);border:1px solid var(--bdr);border-radius:22px;padding:9px 12px 9px 34px;font-family:var(--sans);font-size:14px;color:var(--cream);outline:none;transition:border-color .2s;-webkit-appearance:none}
+.gSearchInput::placeholder{color:var(--muted)}
+.gSearchInput:focus{border-color:var(--bdrl)}
+.gSearchInput::-webkit-search-cancel-button{-webkit-appearance:none}
+.gSortBtn{width:40px;height:40px;border-radius:50%;border:1px solid var(--bdr);background:var(--sf2);color:var(--creamd);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background .15s,border-color .15s,color .15s;position:relative}
+.gSortBtn:active{background:var(--sf3)}
+.gSortBtn.sorted{border-color:var(--acc);color:var(--acc)}
+.gSortBtn svg{width:18px;height:18px;stroke-width:1.5}
+.gNoMatch{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:48px 32px;text-align:center;color:var(--muted);font-size:14px}
+.gNoMatch svg{width:36px;height:36px;opacity:.3}
+/* ── Gallery context menu ── */
+#ctxMenu{z-index:350}
+.ctxCharName{font-size:12px;color:var(--muted);padding:0 20px 12px;letter-spacing:.04em;text-transform:uppercase;border-bottom:1px solid var(--bdr)}
+.ctxItem{display:flex;align-items:center;gap:14px;padding:15px 20px;font-size:15px;color:var(--cream);cursor:pointer;transition:background .12s}
+.ctxItem:active{background:var(--sf2)}
+.ctxItem svg{width:20px;height:20px;flex-shrink:0;stroke-width:1.5}
+.ctxItem.danger{color:#e74c3c}
 #scrChar .nav{position:absolute;top:0;left:0;right:0;background:transparent;border:none;z-index:20}
 .dScroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(20px + var(--sb));scrollbar-width:none}
 .dScroll::-webkit-scrollbar{display:none}
@@ -263,15 +284,38 @@ textarea.fi{resize:none;line-height:1.5}
 <!-- GALLERY -->
 <div class="screen" id="scrGallery">
   <div class="nav">
-    <div class="navG"><span class="navW" style="font-size:9px;letter-spacing:.2em">GoGo</span><span class="navT" style="font-size:24px">Gallery</span></div>
+    <div class="navG"><span class="navW" style="font-size:9px;letter-spacing:.2em">GoGo</span><span class="navT" style="font-size:24px">Gallery</span><span id="gCount" style="font-size:12px;color:var(--muted);font-weight:400;margin-left:8px;vertical-align:middle"></span></div>
     <button class="iBtn" onclick="showScreen('settings')" aria-label="Settings">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+    </button>
+  </div>
+  <div class="gToolbar">
+    <div class="gSearchWrap">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/></svg>
+      <input class="gSearchInput" id="gSearch" type="search" placeholder="Search characters…" oninput="onGallerySearch(this.value)" autocomplete="off" autocorrect="off" spellcheck="false">
+    </div>
+    <button class="gSortBtn" id="gSortBtn" onclick="cycleSort()" aria-label="Sort">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7h18M6 12h12M10 17h4"/></svg>
     </button>
   </div>
   <div id="gCont" class="gScroll"></div>
   <button class="fab" onclick="openWizard()" aria-label="New character">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
   </button>
+</div>
+
+<!-- GALLERY CONTEXT MENU -->
+<div class="sheet" id="ctxMenu">
+  <div style="width:36px;height:4px;border-radius:2px;background:var(--bdr);margin:10px auto 14px"></div>
+  <div class="ctxCharName" id="ctxCharName"></div>
+  <div class="ctxItem" onclick="ctxOpen()">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+    Open Character
+  </div>
+  <div class="ctxItem danger" onclick="ctxDelete()">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+    Delete Character
+  </div>
 </div>
 
 <!-- CHARACTER DETAIL -->
@@ -1255,6 +1299,7 @@ let activePose=null,activeClothing=null,activeState=null;
 let activeToggles={sheer:false,hardNipples:false,erect:false,holding:false};
 let seedVal='',seedLocked=false;
 let curFsId=null,wizStep=0,wizPortrait=null;
+let gallerySearch='',gallerySort='newest',ctxCharId=null;
 
 // ── Navigation ──
 const SCREEN_IDS={gallery:'scrGallery',character:'scrChar',settings:'scrSettings'};
@@ -1304,24 +1349,114 @@ function closeModal(id){$(id).classList.remove('open')}
 
 // ── Gallery ──
 async function renderGallery(){
-  const chars=getChars(),el=$('gCont');
-  if(!chars.length){
+  const allChars=getChars(),el=$('gCont');
+  const countEl=$('gCount');
+
+  // Update character count
+  if(countEl) countEl.textContent=allChars.length?`${allChars.length}`:'';
+
+  if(!allChars.length){
     el.innerHTML=`<div class="empty"><div class="empty-icon">✦</div><h2>No characters yet</h2><p>Tap + to create your first character with AI-generated portraits</p></div>`;
     return;
   }
+
+  // Filter by search
+  const q=gallerySearch.trim().toLowerCase();
+  let chars=q?allChars.filter(c=>c.name.toLowerCase().includes(q)||
+    (c.ethnicity||'').toLowerCase().includes(q)||
+    (c.gender||'').toLowerCase().includes(q)):allChars;
+
+  // Sort
+  if(gallerySort==='az') chars=[...chars].sort((a,b)=>a.name.localeCompare(b.name));
+  else if(gallerySort==='oldest') chars=[...chars].sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+  else chars=[...chars].sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)); // newest default (portraits sort applied later async)
+
+  if(!chars.length){
+    el.innerHTML=`<div class="gNoMatch"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/></svg><span>No characters match "<strong>${esc(q)}</strong>"</span></div>`;
+    return;
+  }
+
   el.innerHTML=`<div class="gGrid">${chars.map(c=>`
-    <div class="card" onclick="openChar('${c.id}')" id="cd-${c.id}">
+    <div class="card" id="cd-${c.id}" data-id="${c.id}">
       <div class="card-ph shimmer"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span>Loading...</span></div>
       <div class="card-ov"><div class="card-name">${esc(c.name)}</div><div class="card-role">${[c.age?c.age+' yrs':'',c.ethnicity,c.gender].filter(Boolean).join(' · ')}</div></div>
     </div>`).join('')}</div>`;
+
+  const portCounts=[];
   for(const c of chars){
     const p=await DB.latest(c.id),cnt=(await DB.forChar(c.id)).length;
+    portCounts.push({id:c.id,cnt});
     const card=$('cd-'+c.id);if(!card)continue;
     const ph=card.querySelector('.card-ph');
     if(p&&ph){const img=document.createElement('img');img.className='card-img';img.src=imgSrc(p.imageData);img.alt=c.name;ph.replaceWith(img)}
     else if(ph){ph.classList.remove('shimmer')}
     if(cnt>1){const badge=document.createElement('div');badge.className='cnt-badge';badge.innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:11px;height:11px"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>${cnt}`;card.appendChild(badge)}
+
+    // Long-press / hold to open context menu
+    let pressTimer=null,didLongPress=false;
+    card.addEventListener('touchstart',()=>{
+      didLongPress=false;
+      pressTimer=setTimeout(()=>{didLongPress=true;openCtx(c.id,c.name);},520);
+    },{passive:true});
+    card.addEventListener('touchend',()=>clearTimeout(pressTimer),{passive:true});
+    card.addEventListener('touchmove',()=>clearTimeout(pressTimer),{passive:true});
+    card.addEventListener('click',()=>{if(!didLongPress)openChar(c.id);});
+    // Right-click on desktop
+    card.addEventListener('contextmenu',e=>{e.preventDefault();openCtx(c.id,c.name);});
   }
+
+  // Re-sort by portrait count after async load
+  if(gallerySort==='portraits'){
+    const grid=el.querySelector('.gGrid');if(!grid)return;
+    const sorted=[...portCounts].sort((a,b)=>b.cnt-a.cnt);
+    sorted.forEach(({id})=>{const card=$('cd-'+id);if(card)grid.appendChild(card);});
+  }
+}
+
+// ── Gallery helpers ──
+function onGallerySearch(v){
+  gallerySearch=v;
+  renderGallery();
+}
+
+function cycleSort(){
+  const orders=['newest','oldest','az','portraits'];
+  gallerySort=orders[(orders.indexOf(gallerySort)+1)%orders.length];
+  updateSortBtn();
+  renderGallery();
+}
+
+function updateSortBtn(){
+  const btn=$('gSortBtn');if(!btn)return;
+  const isDefault=gallerySort==='newest';
+  btn.classList.toggle('sorted',!isDefault);
+  const labels={newest:'Sort: Newest first',oldest:'Sort: Oldest first',az:'Sort: A–Z',portraits:'Sort: Most portraits'};
+  btn.setAttribute('aria-label',labels[gallerySort]);
+  const icons={
+    newest:'<path stroke-linecap="round" stroke-linejoin="round" d="M3 7h18M6 12h12M10 17h4"/>',
+    oldest:'<path stroke-linecap="round" stroke-linejoin="round" d="M3 17h18M6 12h12M10 7h4"/>',
+    az:'<path stroke-linecap="round" stroke-linejoin="round" d="M3 7h4m0 0l-2 5h4l-2-5zm10 0h6M13 12h6M15 17h4"/>',
+    portraits:'<path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>'
+  };
+  btn.innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">${icons[gallerySort]}</svg>`;
+}
+
+function openCtx(id,name){
+  ctxCharId=id;
+  const el=$('ctxCharName');if(el)el.textContent=name;
+  openSheet('ctxMenu');
+}
+
+function ctxOpen(){
+  closeAllSheets();
+  if(ctxCharId)openChar(ctxCharId);
+}
+
+function ctxDelete(){
+  closeAllSheets();
+  if(!ctxCharId)return;
+  curCharId=ctxCharId;
+  openModal('mDelete');
 }
 
 // ── Character Detail ──
@@ -1868,7 +2003,7 @@ async function confirmDelChar(){
   closeModal('mDelete');
   await DB.delForChar(curCharId);
   saveChars(getChars().filter(c=>c.id!==curCharId));
-  curCharId=null;showScreen('gallery');toast('Character deleted');
+  curCharId=null;ctxCharId=null;showScreen('gallery');toast('Character deleted');
 }
 
 // ── Wizard ──
