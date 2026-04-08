@@ -1762,15 +1762,76 @@ function buildFallback(char,pose,clothing,state,toggles){
   parts.push(`${eth} ${fem?'woman':'man'}`.trim());
   if(char.age)parts.push(char.age+' years old');
 
-  // 5. Physical
+  // Skin tone derived from ethnicity — explicit complexion anchors improve consistency
+  const skinToneMap={
+    'British / English':'fair skin, light complexion',
+    'Irish':'fair skin, pale complexion',
+    'Scottish / Welsh':'fair skin, pale complexion',
+    'French':'fair skin, light complexion',
+    'German / Austrian / Swiss':'fair skin, light complexion',
+    'Italian':'olive skin, mediterranean complexion',
+    'Spanish / Catalan':'olive skin, mediterranean complexion',
+    'Portuguese':'olive skin, mediterranean complexion',
+    'Dutch / Belgian / Flemish':'fair skin, light complexion',
+    'Scandinavian / Nordic':'very fair skin, pale complexion',
+    'Polish / Czech / Slovak':'fair skin, light complexion',
+    'Russian / Ukrainian / Belarusian':'fair skin, light complexion',
+    'Greek / Cypriot':'olive skin, mediterranean complexion',
+    'Romanian / Moldovan':'fair skin, light complexion',
+    'Jewish / Ashkenazi':'fair skin, light complexion',
+    'Chinese / Han':'light skin, fair east asian complexion',
+    'Japanese':'light skin, fair east asian complexion',
+    'Korean':'light skin, fair east asian complexion',
+    'Taiwanese':'light skin, fair east asian complexion',
+    'Thai':'light brown skin, warm southeast asian complexion',
+    'Vietnamese':'light brown skin, warm southeast asian complexion',
+    'Filipino / Filipina':'light brown skin, warm complexion',
+    'Indonesian / Javanese / Balinese':'warm brown skin, southeast asian complexion',
+    'Malaysian / Singaporean':'light brown skin, warm complexion',
+    'Indian / North Indian':'warm brown skin, south asian complexion',
+    'Indian / South Indian / Tamil':'dark brown skin, deep south asian complexion',
+    'Indian / Bengali':'warm brown skin, south asian complexion',
+    'Pakistani / Punjabi':'warm brown skin, south asian complexion',
+    'Sri Lankan / Sinhalese':'dark brown skin, south asian complexion',
+    'Arab / Egyptian':'olive brown skin, middle eastern complexion',
+    'Arab / Levantine (Syrian, Lebanese, Jordanian)':'olive skin, light middle eastern complexion',
+    'Arab / Gulf (Emirati, Saudi, Kuwaiti)':'olive brown skin, middle eastern complexion',
+    'Arab / Moroccan / Maghrebi':'olive brown skin, north african complexion',
+    'Iranian / Persian':'olive skin, medium middle eastern complexion',
+    'Turkish':'olive skin, mediterranean-middle eastern complexion',
+    'Hispanic / Mexican':'olive skin, warm latin complexion',
+    'Hispanic / Colombian / Venezuelan':'olive skin, warm latin complexion',
+    'Hispanic / Argentinian / Chilean':'olive skin, light latin complexion',
+    'Brazilian / Afro-Brazilian':'dark brown skin, deep complexion',
+    'Brazilian / Euro-Brazilian':'olive skin, warm complexion',
+    'African American / Black American':'dark brown skin, deep complexion',
+    'West African / Nigerian / Ghanaian':'very dark skin, deep brown complexion',
+    'East African / Kenyan / Ethiopian':'dark brown skin, deep complexion',
+    'Somali':'dark brown skin, deep complexion',
+    'South African / Zulu / Xhosa':'dark brown skin, deep complexion',
+    'Caribbean / Afro-Caribbean':'dark brown skin, deep complexion',
+    'Mixed — Black & White':'light brown skin, mixed complexion',
+    'Mixed — Asian & White':'light skin, mixed complexion',
+    'Mixed — Hispanic & White':'olive skin, mixed complexion',
+  };
+  const skinTone=skinToneMap[char.ethnicity]||'';
+  if(skinTone)parts.push(skinTone);
+
+  // 5. Physical — face & hair
   if(char.face){
-    ['faceShape','eyeColor','hairColor','hairLength','hairStyle','features'].forEach(k=>{
-      if(char.face[k])parts.push(char.face[k]);
-    });
+    const f=char.face;
+    // Combine hair into a single weighted group for stronger adherence
+    const hairParts=[f.hairColor,f.hairLength,f.hairStyle].filter(Boolean);
+    if(hairParts.length)parts.push(`(${hairParts.join(', ')}:1.1)`);
+    // Weight identity-critical face tags
+    if(f.faceShape)parts.push(`(${f.faceShape}:1.1)`);
+    if(f.eyeColor) parts.push(`(${f.eyeColor}:1.1)`);
+    // Features: only include if it looks like tag-style input (not a long sentence)
+    if(f.features){const feat=f.features.trim();if(feat&&feat.length<80)parts.push(feat);}
   }
   if(char.build){
     if(char.build.bodyType)parts.push(char.build.bodyType.toLowerCase());
-    if(fem&&char.build.breastSize)parts.push(char.build.breastSize.toLowerCase());
+    if(fem&&char.build.breastSize)parts.push(`(${char.build.breastSize.toLowerCase()}:1.1)`);
     if(char.build.height){
       const h=char.build.height;
       if(h.startsWith('Petite'))parts.push('very short stature, petite height');
@@ -1823,7 +1884,7 @@ function buildFallback(char,pose,clothing,state,toggles){
 
 async function buildPromptOR(char,pose,clothing,state,toggles,orKey){
   const fem=char.gender==='Female'||char.gender==='Non-binary';
-  const sys=`You are a Stable Diffusion prompt engineer. Given character details, output ONLY a comma-separated SD tag list. Rules: 1) Start with quality tags: score_9, score_8_up, score_7_up, masterpiece, (photorealistic:1.3), ultra detailed, 8k. 2) IMMEDIATELY after quality tags, add the POSE tags — each individual tag wrapped separately in weight brackets like (tag1:1.15), (tag2:1.15) — never put multiple comma-separated tags inside a single bracket pair. 3) Then add camera angle: ${fem?'facing camera, front view, looking at viewer':'facing camera, looking at viewer'}. 4) Then character physical description. 5) Then clothing. 6) Then expression/state. 7) End with: solo, beautiful lighting, professional photography. No sentences, no explanation, just comma-separated tags.`;
+  const sys=`You are a Stable Diffusion prompt engineer. Given character details, output ONLY a comma-separated SD tag list. Rules: 1) Start with quality tags: score_9, score_8_up, score_7_up, masterpiece, (photorealistic:1.3), ultra detailed, 8k. 2) IMMEDIATELY after quality tags, add the POSE tags — each individual tag wrapped separately in weight brackets like (tag1:1.15), (tag2:1.15) — never put multiple comma-separated tags inside a single bracket pair. 3) Then add camera angle: ${fem?'facing camera, front view, looking at viewer':'facing camera, looking at viewer'}. 4) Then character physical description — ethnicity, skin tone, age, body. 5) For face and hair: weight identity-critical tags — combine hair color+length+style into one group (hair color, length, style:1.1), wrap face shape and eye color individually at (tag:1.1). 6) If breast size is provided, wrap it at (breast size tag:1.1). 7) Then clothing. 8) Then expression/state. 9) End with: solo, beautiful lighting, professional photography. No sentences, no explanation, just comma-separated tags.`;
   const personalityStr=char.personality?.traits?.length
     ?`${char.personality.traits.join(', ')}${char.personality?.notes?`; ${char.personality.notes}`:''}`
     :(char.personality?.notes||'');
@@ -1859,9 +1920,14 @@ async function buildPrompt(char,pose,clothing,state,toggles,orKey){
   let prompt='';
   if(orKey){try{prompt=await buildPromptOR(char,pose,clothing,state,toggles,orKey)}catch(e){console.warn('OR failed:',e)}}
   if(!prompt)prompt=buildFallback(char,pose,clothing,state,toggles);
-  // Prepend face reference at moderate weight — kept lower than pose to avoid crowding it out
+  // Inject face reference after quality anchors (not before them) so score_9 stays first
   if(char.facePrompt){
-    prompt=`(${char.facePrompt}:1.2), `+prompt;
+    const qualityAnchor='score_9, score_8_up, score_7_up, masterpiece, (photorealistic:1.3), ultra detailed, 8k';
+    if(prompt.includes(qualityAnchor)){
+      prompt=prompt.replace(qualityAnchor,`${qualityAnchor}, (${char.facePrompt}:1.2)`);
+    } else {
+      prompt=`(${char.facePrompt}:1.2), `+prompt;
+    }
   }
   return prompt;
 }
