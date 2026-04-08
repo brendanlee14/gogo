@@ -1227,7 +1227,7 @@ const STATES_M = [
   { label: 'Submissive', prompt: 'submissive expression, yielding, pliant' },
 ];
 
-const NEG = '(worst quality, low quality:1.4), (deformed, distorted:1.3), bad anatomy, extra limbs, mutated hands, blurry, ugly, watermark, text, signature, jpeg artifacts';
+const NEG = '(worst quality, low quality:1.4), (deformed, distorted:1.3), bad anatomy, (bad hands:1.3), (malformed hands:1.3), extra fingers, missing fingers, fused fingers, (extra limbs:1.2), mutated hands, blurry, ugly, watermark, text, signature, jpeg artifacts';
 
 const MODELS = [
   { id: 'lustify-sdxl', label: 'Lustify SDXL (default)' },
@@ -1684,13 +1684,79 @@ function buildFallback(char,pose,clothing,state,toggles){
 
   // 4. Subject identity
   const ethMap={
-    'Caucasian / White':'caucasian','East Asian':'east asian','South Asian':'south asian, indian',
-    'Southeast Asian':'southeast asian','Black / African':'black','Hispanic / Latina':'hispanic, latina',
+    // Europe
+    'British / English':'british','Irish':'irish','Scottish / Welsh':'scottish',
+    'French':'french','German / Austrian / Swiss':'german','Italian':'italian',
+    'Spanish / Catalan':'spanish','Portuguese':'portuguese',
+    'Dutch / Belgian / Flemish':'dutch, flemish',
+    'Scandinavian / Nordic':'scandinavian, nordic',
+    'Polish / Czech / Slovak':'slavic, eastern european',
+    'Russian / Ukrainian / Belarusian':'russian, slavic',
+    'Greek / Cypriot':'greek, mediterranean',
+    'Romanian / Moldovan':'romanian, eastern european',
+    'Hungarian / Serbian / Croatian':'eastern european',
+    'Finnish / Estonian / Latvian / Lithuanian':'northern european',
+    'Jewish / Ashkenazi':'ashkenazi jewish, eastern european',
+    // East Asia
+    'Chinese / Han':'chinese, east asian','Japanese':'japanese, east asian',
+    'Korean':'korean, east asian','Taiwanese':'taiwanese, east asian',
+    'Mongolian':'mongolian','Tibetan':'tibetan',
+    // Southeast Asia
+    'Thai':'thai, southeast asian','Vietnamese':'vietnamese, southeast asian',
+    'Filipino / Filipina':'filipino, filipina, southeast asian',
+    'Indonesian / Javanese / Balinese':'indonesian, southeast asian',
+    'Malaysian / Singaporean':'malaysian, southeast asian',
+    'Cambodian / Khmer':'cambodian, southeast asian',
+    'Burmese / Myanmar':'burmese, southeast asian','Laotian':'laotian, southeast asian',
+    // South Asia
+    'Indian / North Indian':'indian, north indian, south asian',
+    'Indian / South Indian / Tamil':'south indian, tamil, dravidian',
+    'Indian / Bengali':'bengali, indian, south asian',
+    'Pakistani / Punjabi':'pakistani, punjabi, south asian',
+    'Bangladeshi':'bangladeshi, south asian',
+    'Sri Lankan / Sinhalese':'sri lankan, south asian','Nepali':'nepali, south asian',
+    // Middle East & Central Asia
+    'Arab / Egyptian':'egyptian, arab, middle eastern',
+    'Arab / Levantine (Syrian, Lebanese, Jordanian)':'levantine arab, middle eastern',
+    'Arab / Gulf (Emirati, Saudi, Kuwaiti)':'gulf arab, middle eastern',
+    'Arab / Moroccan / Maghrebi':'moroccan, north african, arab',
+    'Iranian / Persian':'persian, iranian, middle eastern',
+    'Turkish':'turkish, anatolian','Kurdish':'kurdish, middle eastern',
+    'Israeli / Mizrahi Jewish':'mizrahi jewish, middle eastern',
+    'Afghan / Pashtun':'afghan, pashtun, central asian',
+    'Uzbek / Kazakh / Kyrgyz':'central asian, uzbek',
+    // Sub-Saharan Africa
+    'West African / Nigerian / Ghanaian':'west african, nigerian',
+    'East African / Kenyan / Ethiopian':'east african, ethiopian',
+    'Somali':'somali, east african',
+    'South African / Zulu / Xhosa':'south african, zulu',
+    'Congolese / Central African':'central african, congolese',
+    'Senegalese / Malian':'west african, senegalese',
+    // Americas
+    'African American / Black American':'black american, african american',
+    'Hispanic / Mexican':'hispanic, mexican, latina',
+    'Hispanic / Colombian / Venezuelan':'hispanic, colombian, latina',
+    'Hispanic / Argentinian / Chilean':'hispanic, argentinian, latina',
+    'Brazilian / Afro-Brazilian':'afro-brazilian, black brazilian',
+    'Brazilian / Euro-Brazilian':'brazilian, euro-brazilian',
+    'Indigenous / Native American':'native american, indigenous',
+    'Caribbean / Afro-Caribbean':'afro-caribbean, caribbean',
+    // Pacific & Oceania
+    'Māori / Pacific Islander':'maori, pacific islander',
+    'Aboriginal Australian':'aboriginal australian',
+    'Hawaiian / Polynesian':'hawaiian, polynesian',
+    // Mixed & Other
+    'Mixed — Black & White':'mixed race, black and white biracial',
+    'Mixed — Asian & White':'mixed race, half asian, eurasian',
+    'Mixed — Asian & Black':'mixed race, afro-asian',
+    'Mixed — Hispanic & White':'mixed race, hispanic and white',
+    'Mixed — Multiple':'mixed race, multiracial',
+    'Other / Unspecified':'',
+    // Legacy keys (kept for backwards compatibility with old saves)
+    'Caucasian / White':'caucasian','East Asian':'east asian',
+    'South Asian':'south asian, indian','Southeast Asian':'southeast asian',
+    'Black / African':'black','Hispanic / Latina':'hispanic, latina',
     'Middle Eastern':'middle eastern','Mixed / Multiracial':'mixed race',
-    'British / English':'british','French':'french','German / Austrian / Swiss':'german',
-    'Italian':'italian','Spanish / Catalan':'spanish','Japanese':'japanese','Korean':'korean',
-    'Chinese / Han':'chinese','Filipino / Filipina':'filipino','Thai':'thai','Vietnamese':'vietnamese',
-    'Brazilian / Euro-Brazilian':'brazilian','African American / Black American':'black american',
   };
   const eth=ethMap[char.ethnicity]||'';
   parts.push(`${eth} ${fem?'woman':'man'}`.trim());
@@ -1705,6 +1771,14 @@ function buildFallback(char,pose,clothing,state,toggles){
   if(char.build){
     if(char.build.bodyType)parts.push(char.build.bodyType.toLowerCase());
     if(fem&&char.build.breastSize)parts.push(char.build.breastSize.toLowerCase());
+    if(char.build.height){
+      const h=char.build.height;
+      if(h.startsWith('Petite'))parts.push('very short stature, petite height');
+      else if(h.startsWith('Short'))parts.push('short stature');
+      else if(h.startsWith('Very'))parts.push('very tall stature');
+      else if(h.startsWith('Tall'))parts.push('tall stature, long legs');
+      // Average: no tag — SD default
+    }
   }
 
   // 6. Clothing
@@ -1713,7 +1787,27 @@ function buildFallback(char,pose,clothing,state,toggles){
   // 7. State / expression
   if(state)parts.push(state.prompt);
 
-  // 8. Modifiers
+  // 8. Personality → visual body language / demeanor
+  if(char.personality?.traits?.length){
+    const traitTagMap={
+      confident:  'confident expression, self-assured look',
+      mysterious: 'mysterious gaze, enigmatic expression',
+      playful:    'playful smile, mischievous look',
+      intelligent:'intelligent expression, thoughtful gaze',
+      caring:     'warm expression, gentle smile',
+      fierce:     'fierce expression, intense stare',
+      gentle:     'gentle expression, soft demeanor',
+      dominant:   'dominant posture, commanding presence',
+      submissive: 'timid posture, yielding expression',
+      witty:      'amused smirk, bright eyes',
+      damaged:    'melancholic expression, haunted look',
+      ambitious:  'determined expression, focused gaze',
+    };
+    const traitTags=char.personality.traits.map(t=>traitTagMap[t]).filter(Boolean).join(', ');
+    if(traitTags)parts.push(traitTags);
+  }
+
+  // 9. Modifiers
   if(fem){
     if(toggles.sheer)parts.push('sheer fabric, see-through material');
     if(toggles.hardNipples)parts.push('hard nipples, erect nipples');
@@ -1730,10 +1824,14 @@ function buildFallback(char,pose,clothing,state,toggles){
 async function buildPromptOR(char,pose,clothing,state,toggles,orKey){
   const fem=char.gender==='Female'||char.gender==='Non-binary';
   const sys=`You are a Stable Diffusion prompt engineer. Given character details, output ONLY a comma-separated SD tag list. Rules: 1) Start with quality tags: score_9, score_8_up, score_7_up, masterpiece, (photorealistic:1.3), ultra detailed, 8k. 2) IMMEDIATELY after quality tags, add the POSE tags — each individual tag wrapped separately in weight brackets like (tag1:1.15), (tag2:1.15) — never put multiple comma-separated tags inside a single bracket pair. 3) Then add camera angle: ${fem?'facing camera, front view, looking at viewer':'facing camera, looking at viewer'}. 4) Then character physical description. 5) Then clothing. 6) Then expression/state. 7) End with: solo, beautiful lighting, professional photography. No sentences, no explanation, just comma-separated tags.`;
+  const personalityStr=char.personality?.traits?.length
+    ?`${char.personality.traits.join(', ')}${char.personality?.notes?`; ${char.personality.notes}`:''}`
+    :(char.personality?.notes||'');
   const usr=`Character: ${JSON.stringify({name:char.name,gender:char.gender,age:char.age,ethnicity:char.ethnicity,build:char.build,face:char.face})}
 Pose (MUST be second after quality tags, weighted): ${pose?pose.prompt:'standing neutral'}
 Clothing: ${clothing?clothing.prompt:'tasteful default'}
 Expression: ${state?state.prompt:'neutral'}
+${personalityStr?`Personality (translate to visible expression/posture/demeanor SD tags): ${personalityStr}`:''}
 ${fem&&toggles.hardNipples?'Add: hard nipples, erect nipples':''}
 ${fem&&toggles.sheer?'Add: sheer fabric, see-through':''}
 ${!fem&&toggles.erect?'Add: erect penis':''}
@@ -1741,7 +1839,7 @@ ${fem&&clothing&&(clothing.label==='Nude'||clothing.label==='Topless')?'Add: bre
   const resp=await fetch('https://openrouter.ai/api/v1/chat/completions',{
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+orKey},
-    body:JSON.stringify({model:'openai/gpt-4o-mini',messages:[{role:'system',content:sys},{role:'user',content:usr}],stream:true,max_tokens:400})
+    body:JSON.stringify({model:'openai/gpt-4o-mini',messages:[{role:'system',content:sys},{role:'user',content:usr}],stream:true,max_tokens:600})
   });
   if(!resp.ok)throw new Error('OR '+resp.status);
   const reader=resp.body.getReader(),dec=new TextDecoder();
