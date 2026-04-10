@@ -1227,7 +1227,7 @@ const STATES_M = [
   { label: 'Submissive', prompt: 'submissive expression, yielding, pliant' },
 ];
 
-const NEG = '(worst quality, low quality:1.4), (deformed, distorted:1.3), bad anatomy, (bad hands:1.3), (malformed hands:1.3), extra fingers, missing fingers, fused fingers, (extra limbs:1.2), mutated hands, blurry, ugly, watermark, text, signature, jpeg artifacts';
+const NEG = '(worst quality, low quality:1.4), (deformed, distorted:1.3), bad anatomy, (bad hands:1.3), (malformed hands:1.3), extra fingers, missing fingers, fused fingers, (extra limbs:1.2), mutated hands, blurry, ugly, watermark, text, signature, jpeg artifacts, censored, mosaic, (ai-generated look:1.2), overly perfect skin, studio lighting, fashion editorial';
 
 const MODELS = [
   { id: 'lustify-sdxl', label: 'Lustify SDXL (default)' },
@@ -1900,7 +1900,7 @@ ${fem&&clothing&&(clothing.label==='Nude'||clothing.label==='Topless')?'Add: bre
   const resp=await fetch('https://openrouter.ai/api/v1/chat/completions',{
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+orKey},
-    body:JSON.stringify({model:'openai/gpt-4o-mini',messages:[{role:'system',content:sys},{role:'user',content:usr}],stream:true,max_tokens:600})
+    body:JSON.stringify({model:'deepseek/deepseek-v3-0324',messages:[{role:'system',content:sys},{role:'user',content:usr}],stream:true,max_tokens:600})
   });
   if(!resp.ok)throw new Error('OR '+resp.status);
   const reader=resp.body.getReader(),dec=new TextDecoder();
@@ -1916,10 +1916,36 @@ ${fem&&clothing&&(clothing.label==='Nude'||clothing.label==='Topless')?'Add: bre
   return result.trim();
 }
 
+async function expandPromptOR(basePrompt,orKey){
+  const sys=`You are a Stable Diffusion prompt engineer. You will receive an SD tag prompt. Expand and improve it — add more specific detail to the physical description, ensure proper SD weighting syntax, and improve tag variety. Preserve all existing tags and their weights. Output ONLY the improved comma-separated tag list. No explanation.`;
+  const usr=`Expand this SD prompt: ${basePrompt}`;
+  const resp=await fetch('https://openrouter.ai/api/v1/chat/completions',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+orKey},
+    body:JSON.stringify({model:'deepseek/deepseek-v3-0324',messages:[{role:'system',content:sys},{role:'user',content:usr}],stream:true,max_tokens:600})
+  });
+  if(!resp.ok)throw new Error('OR '+resp.status);
+  const reader=resp.body.getReader(),dec=new TextDecoder();
+  let result='';
+  while(true){
+    const{done,value}=await reader.read();if(done)break;
+    for(const line of dec.decode(value).split('\n')){
+      if(line.startsWith('data: ')&&line!=='data: [DONE]'){
+        try{result+=(JSON.parse(line.slice(6)).choices?.[0]?.delta?.content||'')}catch{}
+      }
+    }
+  }
+  return result.trim()||basePrompt;
+}
+
 async function buildPrompt(char,pose,clothing,state,toggles,orKey){
-  let prompt='';
-  if(orKey){try{prompt=await buildPromptOR(char,pose,clothing,state,toggles,orKey)}catch(e){console.warn('OR failed:',e)}}
-  if(!prompt)prompt=buildFallback(char,pose,clothing,state,toggles);
+  // Stage 1: Always build a strong base prompt
+  let prompt=buildFallback(char,pose,clothing,state,toggles);
+  // Stage 2: If OpenRouter available, expand/polish the base prompt with AI
+  if(orKey){
+    try{prompt=await expandPromptOR(prompt,orKey)}
+    catch(e){console.warn('OR expansion failed, using base prompt:',e)}
+  }
   // Inject face reference after quality anchors (not before them) so score_9 stays first
   if(char.facePrompt){
     const qualityAnchor='score_9, score_8_up, score_7_up, masterpiece, (photorealistic:1.3), ultra detailed, 8k';
@@ -1978,7 +2004,8 @@ async function callVenice(prompt,seed,model,key,onStage,_retry=false){
     ?`✓ Done in ${elapsed}s (queue ${(queueMs/1000).toFixed(1)}s, render ${(inferMs/1000).toFixed(1)}s)`
     :`✓ Done in ${elapsed}s`;
   onStage&&onStage('done',doneMsg);
-  return b64;
+  const returnedSeed=d.metadata?.seed??seed;
+  return {b64,seed:returnedSeed};
 }
 
 // ── Generate Portrait ──
@@ -2015,10 +2042,10 @@ async function genPortrait(){
     else{seed=Math.floor(Math.random()*999999999)}
     setGenStage(stEl,'prompt',s.orKey?'Building AI prompt…':'Building prompt…');
     const prompt=await buildPrompt(char,activePose,activeClothing,activeState,activeToggles,s.orKey);
-    const imageData=await callVenice(prompt,seed,s.model,s.veniceKey,(stage,detail)=>setGenStage(stEl,stage,detail));
-    const rec={characterId:char.id,imageData,prompt,seed,model:s.model,poseLabel:activePose?.label||'',clothingLabel:activeClothing?.label||'',createdAt:Date.now()};
+    const {b64:imageData,seed:actualSeed}=await callVenice(prompt,seed,s.model,s.veniceKey,(stage,detail)=>setGenStage(stEl,stage,detail));
+    const rec={characterId:char.id,imageData,prompt,seed:actualSeed,model:s.model,poseLabel:activePose?.label||'',clothingLabel:activeClothing?.label||'',createdAt:Date.now()};
     await DB.add(rec);
-    if(!seedLocked){seedVal=seed.toString();const i=$('seedInp');if(i)i.value=seedVal}
+    if(!seedLocked){seedVal=actualSeed.toString();const i=$('seedInp');if(i)i.value=seedVal}
     curPortraits=await DB.forChar(char.id);
     renderCarousel(char);
     const crsl=$('crsl');if(crsl)crsl.scrollLeft=0;
@@ -2110,7 +2137,7 @@ async function extractFacePrompt(sourcePrompt,char,orKey){
   const resp=await fetch('https://openrouter.ai/api/v1/chat/completions',{
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+orKey},
-    body:JSON.stringify({model:'openai/gpt-4o-mini',messages:[{role:'system',content:sys},{role:'user',content:usr}],stream:true,max_tokens:200})
+    body:JSON.stringify({model:'deepseek/deepseek-v3-0324',messages:[{role:'system',content:sys},{role:'user',content:usr}],stream:true,max_tokens:200})
   });
   if(!resp.ok)throw new Error('OR '+resp.status);
   const reader=resp.body.getReader(),dec=new TextDecoder();
@@ -2292,8 +2319,8 @@ async function wizGenPortrait(){
     const wc=gatherWizData();
     const prompt=await buildPrompt(wc,null,null,null,{},s.orKey);
     const seed=Math.floor(Math.random()*999999999);
-    const imageData=await callVenice(prompt,seed,s.model,s.veniceKey,onStage);
-    wizPortrait={imageData,prompt,seed,model:s.model};
+    const {b64:imageData,seed:actualSeed}=await callVenice(prompt,seed,s.model,s.veniceKey,onStage);
+    wizPortrait={imageData,prompt,seed:actualSeed,model:s.model};
     if(ov)ov.classList.add('gone');
     const box=$('wizPortBox');
     let img=box.querySelector('img');
