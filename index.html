@@ -389,6 +389,18 @@ textarea.fi{resize:none;line-height:1.5}
     </div>
     <div class="sCard">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div class="sCardT" style="margin-bottom:0">Generation Log</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btnG" style="font-size:11px;padding:5px 10px" onclick="copyGenLog()">Copy</button>
+          <button class="btn btnG" style="font-size:11px;padding:5px 10px" onclick="clearGenLog()">Clear</button>
+        </div>
+      </div>
+      <div id="genLogBody" style="font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.7;max-height:260px;overflow-y:auto;background:var(--bg);border:1px solid var(--bdr);border-radius:var(--rs);padding:10px">
+        <span style="color:var(--muted);font-style:italic">No generations logged yet</span>
+      </div>
+    </div>
+    <div class="sCard">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <div class="sCardT" style="margin-bottom:0">Error Log</div>
         <div style="display:flex;gap:8px">
           <button class="btn btnG" style="font-size:11px;padding:5px 10px" onclick="copyErrorLog()">Copy</button>
@@ -917,6 +929,60 @@ function copyErrorLog(){
   navigator.clipboard.writeText(txt).then(()=>toast('Copied to clipboard')).catch(()=>toast('Copy failed'));
 }
 function clearErrorLog(){saveErrLog([]);renderErrorLog();toast('Error log cleared')}
+
+// ── GENERATION LOG ──
+const MAX_GEN_LOG=30;
+function getGenLog(){return LS.get('gogo_genlog',[])}
+function saveGenLog(l){LS.set('gogo_genlog',l)}
+
+let _genSession=null;
+function genLogStart(char,seed,model,seedSrc,hasOR){
+  _genSession={ts:Date.now(),char:char.name||'?',outcome:'?',lines:[]};
+  _genLogLine('=== Generation Session ===');
+  _genLogLine(`Timestamp: ${new Date(_genSession.ts).toISOString()}`);
+  _genLogLine(`Character: ${char.name||'?'} | Gender: ${char.gender||'—'} | Age: ${char.age||'—'} | Ethnicity: ${char.ethnicity||'—'}`);
+  _genLogLine(`Model: ${model||'lustify-sdxl'} | Seed: ${seed} (${seedSrc}) | AI prompt: ${hasOR?'yes (OpenRouter)':'no (fallback)'}`);
+  _genLogLine(`Toggles: sheer=${!!char._toggles?.sheer} hardNipples=${!!char._toggles?.hardNipples} erect=${!!char._toggles?.erect}`);
+}
+function _genLogLine(line){if(_genSession)_genSession.lines.push(line)}
+function genLogSave(outcome){
+  if(!_genSession)return;
+  _genSession.outcome=outcome;
+  const l=getGenLog();
+  l.unshift(_genSession);
+  if(l.length>MAX_GEN_LOG)l.length=MAX_GEN_LOG;
+  saveGenLog(l);
+  renderGenLog();
+  _genSession=null;
+}
+function renderGenLog(){
+  const el=$('genLogBody');if(!el)return;
+  const l=getGenLog();
+  if(!l.length){el.innerHTML='<span style="color:var(--muted);font-style:italic">No generations logged yet</span>';return}
+  el.innerHTML=l.map(e=>{
+    const ok=e.outcome==='SUCCESS';
+    const col=ok?'var(--acc)':'#e05';
+    const ts=new Date(e.ts).toLocaleString();
+    const lines=e.lines.map(ln=>`<div style="color:${ln.startsWith('===')
+      ?'var(--cream)':ln.startsWith('FATAL')||ln.startsWith('Venice error')||ln.startsWith('Black detected')
+      ?'#e07060':ln.startsWith('Prompt (')||ln.startsWith('Negative (')||ln.startsWith('Black image check')
+      ?'var(--creamd)':'var(--muted)'};white-space:pre-wrap;word-break:break-all">${esc(ln)}</div>`).join('');
+    return `<div style="padding:8px 0;border-bottom:1px solid var(--bdr)">
+      <div style="margin-bottom:4px"><span style="color:${col};font-weight:600">[${e.outcome}]</span> <span style="color:var(--muted);font-size:9px">${esc(ts)}</span> <span style="color:var(--creamd)">${esc(e.char)}</span></div>
+      <div style="padding-left:4px;line-height:1.6">${lines}</div>
+    </div>`;
+  }).join('');
+}
+function copyGenLog(){
+  const l=getGenLog();
+  if(!l.length){toast('No generation log to copy');return}
+  const txt=l.map(e=>{
+    const ts=new Date(e.ts).toISOString();
+    return `[${ts}] ${e.outcome} — ${e.char}\n${e.lines.map(ln=>'  '+ln).join('\n')}`;
+  }).join('\n\n---\n\n');
+  navigator.clipboard.writeText(txt).then(()=>toast('Generation log copied')).catch(()=>toast('Copy failed'));
+}
+function clearGenLog(){saveGenLog([]);renderGenLog();toast('Generation log cleared')}
 
 // ── PIN LOCK ──
 let pinEntry = '';
@@ -1960,42 +2026,70 @@ async function buildPrompt(char,pose,clothing,state,toggles,orKey){
 
 // ── Venice API ──
 function isBlackImage(b64){
-  // Decode first ~2KB and check if all pixels are near-black
   try{
     const bin=atob(b64.slice(0,2048));
-    // PNG: after header+IHDR, IDAT chunk contains pixel data — check raw bytes are not all zero
-    // Simpler heuristic: if >95% of sampled bytes are 0x00, it's a black image
     let zeros=0;
     for(let i=0;i<bin.length;i++){if(bin.charCodeAt(i)===0)zeros++}
-    return zeros/bin.length>0.92;
-  }catch{return false}
+    const ratio=zeros/bin.length;
+    return {black:ratio>0.92,ratio};
+  }catch{return {black:false,ratio:0}}
 }
 
 async function callVenice(prompt,seed,model,key,onStage,_retry=false){
   onStage&&onStage('queued',_retry?'Retrying…':'Queued — waiting for Venice…');
   const t0=Date.now();
+  const reqModel=model||'lustify-sdxl';
+  _genLogLine(`--- Venice request ${_retry?'#2 (retry)':'#1'} ---`);
+  _genLogLine(`model=${reqModel} | seed=${seed} | width=832 | height=1216 | steps=30 | cfg=7.5 | safe_mode=false`);
   const resp=await fetch('https://api.venice.ai/api/v1/image/generate',{
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-    body:JSON.stringify({model:model||'lustify-sdxl',prompt,negative_prompt:NEG,width:832,height:1216,steps:30,cfg_scale:7.5,seed,safe_mode:false,return_binary:false})
+    body:JSON.stringify({model:reqModel,prompt,negative_prompt:NEG,width:832,height:1216,steps:30,cfg_scale:7.5,seed,safe_mode:false,return_binary:false})
   });
-  onStage&&onStage('decoding','Decoding image…');
-  if(!resp.ok){const t=await resp.text();throw new Error(`Venice ${resp.status}: ${t}`)}
-  const d=await resp.json();
   const elapsed=((Date.now()-t0)/1000).toFixed(1);
+  _genLogLine(`HTTP ${resp.status} ${resp.statusText} in ${elapsed}s`);
+  onStage&&onStage('decoding','Decoding image…');
+  if(!resp.ok){
+    const t=await resp.text();
+    _genLogLine(`Venice error body: ${t.slice(0,500)}`);
+    throw new Error(`Venice ${resp.status}: ${t}`);
+  }
+  const d=await resp.json();
   const timing=d.timing;
-  let b64=null;
-  if(d.images?.[0]){const i=d.images[0];b64=typeof i==='string'?i:i.url||i.b64_json}
-  else if(d.data?.[0]){const i=d.data[0];b64=i.b64_json||i.url}
+  _genLogLine(`Response top-level keys: [${Object.keys(d).join(', ')}]`);
+  _genLogLine(`metadata: ${JSON.stringify(d.metadata??null)}`);
+  _genLogLine(`timing: queue=${timing?.inferenceQueueTime??'?'}ms | inference=${timing?.inferenceDuration??'?'}ms`);
+  // Log any unexpected top-level fields (e.g. nsfw flags, warnings)
+  const extraKeys=Object.keys(d).filter(k=>!['images','data','timing','metadata','id','model'].includes(k));
+  if(extraKeys.length)_genLogLine(`extra fields: ${extraKeys.map(k=>`${k}=${JSON.stringify(d[k])}`).join(' | ')}`);
+  let b64=null,imgSrcLabel='';
+  if(d.images?.[0]){
+    const i=d.images[0];
+    imgSrcLabel=`d.images[0] (type=${typeof i}, keys=${typeof i==='object'?Object.keys(i).join(','):'n/a'})`;
+    b64=typeof i==='string'?i:i.url||i.b64_json;
+  } else if(d.data?.[0]){
+    const i=d.data[0];
+    imgSrcLabel=`d.data[0] (keys=${typeof i==='object'?Object.keys(i).join(','):'n/a'})`;
+    b64=i.b64_json||i.url;
+  } else {
+    imgSrcLabel='none';
+    _genLogLine(`NO IMAGE DATA — all top-level keys: ${Object.keys(d).join(', ')}`);
+  }
+  _genLogLine(`image source: ${imgSrcLabel}`);
   if(!b64)throw new Error('Unexpected Venice response');
   b64=b64.replace(/^data:image\/\w+;base64,/,'');
+  _genLogLine(`b64 length: ${b64.length} chars (~${Math.round(b64.length*0.75/1024)}KB decoded)`);
   // Black image detection — auto-retry once with a fresh seed
-  if(isBlackImage(b64)){
+  const {black,ratio}=isBlackImage(b64);
+  _genLogLine(`black image check: ${(ratio*100).toFixed(1)}% zero-bytes in first 2KB → ${black?'BLACK (threshold >92%)':'OK'}`);
+  if(black){
     if(!_retry){
       const newSeed=Math.floor(Math.random()*999999999);
+      _genLogLine(`black detected — retrying with seed ${newSeed}`);
       onStage&&onStage('queued','Black image detected — retrying with new seed…');
       return callVenice(prompt,newSeed,model,key,onStage,true);
     }
+    _genLogLine('black detected on retry — aborting');
     throw new Error('Black image returned twice — model may be overloaded, try again shortly');
   }
   const inferMs=timing?.inferenceDuration;
@@ -2005,6 +2099,7 @@ async function callVenice(prompt,seed,model,key,onStage,_retry=false){
     :`✓ Done in ${elapsed}s`;
   onStage&&onStage('done',doneMsg);
   const returnedSeed=d.metadata?.seed??seed;
+  _genLogLine(`returned seed: ${returnedSeed}${returnedSeed!==seed?' (differs from sent seed '+seed+')':''}`);
   return {b64,seed:returnedSeed};
 }
 
@@ -2036,16 +2131,24 @@ async function genPortrait(){
   btn.disabled=true;btn.classList.add('loading');
   try{
     // Seed priority: manual lock > faceSeed > random
-    let seed;
-    if(seedLocked&&seedVal){seed=parseInt(seedVal)}
-    else if(char.faceSeed&&!seedLocked){seed=char.faceSeed}
-    else{seed=Math.floor(Math.random()*999999999)}
+    let seed,seedSrc;
+    if(seedLocked&&seedVal){seed=parseInt(seedVal);seedSrc='locked'}
+    else if(char.faceSeed&&!seedLocked){seed=char.faceSeed;seedSrc='faceSeed'}
+    else{seed=Math.floor(Math.random()*999999999);seedSrc='random'}
+    genLogStart(char,seed,s.model,seedSrc,!!s.orKey);
+    _genLogLine(`Pose: ${activePose?.label||'none'} | Clothing: ${activeClothing?.label||'none'} | State: ${activeState?.label||'none'}`);
+    _genLogLine(`Face ref: ${char.facePrompt?'yes ('+char.facePrompt.slice(0,60)+'…)':'none'}`);
     setGenStage(stEl,'prompt',s.orKey?'Building AI prompt…':'Building prompt…');
     const prompt=await buildPrompt(char,activePose,activeClothing,activeState,activeToggles,s.orKey);
+    _genLogLine(`--- Prompt (${prompt.length} chars) ---`);
+    _genLogLine(prompt);
+    _genLogLine(`--- Negative (${NEG.length} chars) ---`);
+    _genLogLine(NEG);
     const {b64:imageData,seed:actualSeed}=await callVenice(prompt,seed,s.model,s.veniceKey,(stage,detail)=>setGenStage(stEl,stage,detail));
     const rec={characterId:char.id,imageData,prompt,seed:actualSeed,model:s.model,poseLabel:activePose?.label||'',clothingLabel:activeClothing?.label||'',createdAt:Date.now()};
     await DB.add(rec);
     if(!seedLocked){seedVal=actualSeed.toString();const i=$('seedInp');if(i)i.value=seedVal}
+    genLogSave('SUCCESS');
     curPortraits=await DB.forChar(char.id);
     renderCarousel(char);
     const crsl=$('crsl');if(crsl)crsl.scrollLeft=0;
@@ -2054,9 +2157,11 @@ async function genPortrait(){
   }catch(err){
     console.error(err);
     logError('Portrait generation',err);
+    _genLogLine(`FATAL ERROR: ${err.message||String(err)}`);
+    genLogSave('FAILED');
     const msg=err.message||String(err);
     toast('Generation failed: '+msg.slice(0,60));
-    if(stEl)stEl.innerHTML=`<span style="color:#e05;font-size:11px">Failed — check Error Log in Settings</span>`;
+    if(stEl)stEl.innerHTML=`<span style="color:#e05;font-size:11px">Failed — check Generation Log in Settings</span>`;
   }finally{btn.disabled=false;btn.classList.remove('loading')}
 }
 
@@ -2317,10 +2422,16 @@ async function wizGenPortrait(){
   const onStage=(_stage,detail)=>{if(hint)hint.textContent=detail||'…'};
   try{
     const wc=gatherWizData();
-    const prompt=await buildPrompt(wc,null,null,null,{},s.orKey);
     const seed=Math.floor(Math.random()*999999999);
+    genLogStart(wc,seed,s.model,'random (wizard)',!!s.orKey);
+    const prompt=await buildPrompt(wc,null,null,null,{},s.orKey);
+    _genLogLine(`--- Prompt (${prompt.length} chars) ---`);
+    _genLogLine(prompt);
+    _genLogLine(`--- Negative (${NEG.length} chars) ---`);
+    _genLogLine(NEG);
     const {b64:imageData,seed:actualSeed}=await callVenice(prompt,seed,s.model,s.veniceKey,onStage);
     wizPortrait={imageData,prompt,seed:actualSeed,model:s.model};
+    genLogSave('SUCCESS');
     if(ov)ov.classList.add('gone');
     const box=$('wizPortBox');
     let img=box.querySelector('img');
@@ -2331,6 +2442,8 @@ async function wizGenPortrait(){
     console.error(err);
     if(ov)ov.classList.add('gone');
     logError('Wizard portrait generation',err);
+    _genLogLine(`FATAL ERROR: ${err.message||String(err)}`);
+    genLogSave('FAILED');
     const msg=err.message||String(err)||'Unknown error';
     const eb=$('wizErrBox'),em=$('wizErrMsg');
     if(eb&&em){em.textContent=msg;eb.style.display='block'}
@@ -2428,6 +2541,7 @@ function syncSettings(){
   if(vb)vb.textContent='v'+VERSION;
   syncPinSettings();
   renderErrorLog();
+  renderGenLog();
   fetchVeniceModels(s.veniceKey);
 }
 function saveSettingsNow(){
