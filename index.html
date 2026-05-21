@@ -380,6 +380,30 @@ textarea.fi{resize:none;line-height:1.5}
       </div>
     </div>
     <div class="sCard">
+      <div class="sCardT">Generation Quality</div>
+      <div style="display:flex;gap:16px;margin-bottom:14px">
+        <div style="flex:1">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px"><label class="fl" style="margin-bottom:0">Steps</label><span id="stepsVal" style="font-size:12px;color:var(--acc);font-weight:600">30</span></div>
+          <input type="range" id="sSteps" min="20" max="50" step="1" value="30" oninput="$('stepsVal').textContent=this.value;saveSettingsNow()" style="width:100%;accent-color:var(--prim);height:4px">
+          <div style="display:flex;justify-content:space-between;margin-top:2px"><span style="font-size:10px;color:var(--muted)">Fast (20)</span><span style="font-size:10px;color:var(--muted)">Quality (50)</span></div>
+        </div>
+        <div style="flex:1">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px"><label class="fl" style="margin-bottom:0">Guidance</label><span id="cfgVal" style="font-size:12px;color:var(--acc);font-weight:600">7.5</span></div>
+          <input type="range" id="sCfg" min="4" max="12" step="0.5" value="7.5" oninput="$('cfgVal').textContent=parseFloat(this.value).toFixed(1);saveSettingsNow()" style="width:100%;accent-color:var(--prim);height:4px">
+          <div style="display:flex;justify-content:space-between;margin-top:2px"><span style="font-size:10px;color:var(--muted)">Creative (4)</span><span style="font-size:10px;color:var(--muted)">Precise (12)</span></div>
+        </div>
+      </div>
+      <div class="fg" style="margin-bottom:0">
+        <label class="fl">Resolution</label>
+        <div class="chips" id="sResC" style="flex-wrap:nowrap">
+          <div class="chip sel" data-val="832x1216" onclick="selChip(this,'sResC');saveSettingsNow()">Portrait</div>
+          <div class="chip" data-val="1024x1024" onclick="selChip(this,'sResC');saveSettingsNow()">Square</div>
+          <div class="chip" data-val="1024x1536" onclick="selChip(this,'sResC');saveSettingsNow()">HD Portrait</div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px">HD Portrait (1024×1536) generates more detail at the cost of speed.</div>
+      </div>
+    </div>
+    <div class="sCard">
       <div class="sCardT">Security</div>
       <div class="pinTogRow">
         <div>
@@ -437,11 +461,10 @@ textarea.fi{resize:none;line-height:1.5}
   <div class="shHd"><div class="shT" id="wizTitle">New Character</div></div>
   <div class="wizProg" id="wizProg">
     <div class="wp active"></div><div class="wp"></div><div class="wp"></div>
-    <div class="wp"></div><div class="wp"></div><div class="wp"></div>
   </div>
   <div class="shBody">
 
-    <!-- Step 0: Identity -->
+    <!-- Step 0: Describe -->
     <div class="wstep active" id="wstep0">
       <div class="fg">
         <label class="fl">Gender</label>
@@ -451,249 +474,18 @@ textarea.fi{resize:none;line-height:1.5}
           <div class="chip" data-val="Non-binary" onclick="selChip(this,'wizGenderC')">Non-binary</div>
         </div>
       </div>
-      <div class="fg"><label class="fl">Age</label><input type="number" class="fi" id="wizAge" placeholder="e.g. 24" min="18" max="80"></div>
-      <div class="fg"><label class="fl">Ethnicity</label>
-        <select class="fi" id="wizEthn">
-          <option value="">Select ethnicity…</option>
-          <optgroup label="Europe">
-            <option>British / English</option>
-            <option>Irish</option>
-            <option>Scottish / Welsh</option>
-            <option>French</option>
-            <option>German / Austrian / Swiss</option>
-            <option>Italian</option>
-            <option>Spanish / Catalan</option>
-            <option>Portuguese</option>
-            <option>Dutch / Belgian / Flemish</option>
-            <option>Scandinavian / Nordic</option>
-            <option>Polish / Czech / Slovak</option>
-            <option>Russian / Ukrainian / Belarusian</option>
-            <option>Greek / Cypriot</option>
-            <option>Romanian / Moldovan</option>
-            <option>Hungarian / Serbian / Croatian</option>
-            <option>Finnish / Estonian / Latvian / Lithuanian</option>
-            <option>Jewish / Ashkenazi</option>
-          </optgroup>
-          <optgroup label="East Asia">
-            <option>Chinese / Han</option>
-            <option>Japanese</option>
-            <option>Korean</option>
-            <option>Taiwanese</option>
-            <option>Mongolian</option>
-            <option>Tibetan</option>
-          </optgroup>
-          <optgroup label="Southeast Asia">
-            <option>Thai</option>
-            <option>Vietnamese</option>
-            <option>Filipino / Filipina</option>
-            <option>Indonesian / Javanese / Balinese</option>
-            <option>Malaysian / Singaporean</option>
-            <option>Cambodian / Khmer</option>
-            <option>Burmese / Myanmar</option>
-            <option>Laotian</option>
-          </optgroup>
-          <optgroup label="South Asia">
-            <option>Indian / North Indian</option>
-            <option>Indian / South Indian / Tamil</option>
-            <option>Indian / Bengali</option>
-            <option>Pakistani / Punjabi</option>
-            <option>Bangladeshi</option>
-            <option>Sri Lankan / Sinhalese</option>
-            <option>Nepali</option>
-          </optgroup>
-          <optgroup label="Middle East &amp; Central Asia">
-            <option>Arab / Egyptian</option>
-            <option>Arab / Levantine (Syrian, Lebanese, Jordanian)</option>
-            <option>Arab / Gulf (Emirati, Saudi, Kuwaiti)</option>
-            <option>Arab / Moroccan / Maghrebi</option>
-            <option>Iranian / Persian</option>
-            <option>Turkish</option>
-            <option>Kurdish</option>
-            <option>Israeli / Mizrahi Jewish</option>
-            <option>Afghan / Pashtun</option>
-            <option>Uzbek / Kazakh / Kyrgyz</option>
-          </optgroup>
-          <optgroup label="Sub-Saharan Africa">
-            <option>West African / Nigerian / Ghanaian</option>
-            <option>East African / Kenyan / Ethiopian</option>
-            <option>Somali</option>
-            <option>South African / Zulu / Xhosa</option>
-            <option>Congolese / Central African</option>
-            <option>Senegalese / Malian</option>
-          </optgroup>
-          <optgroup label="Americas">
-            <option>African American / Black American</option>
-            <option>Hispanic / Mexican</option>
-            <option>Hispanic / Colombian / Venezuelan</option>
-            <option>Hispanic / Argentinian / Chilean</option>
-            <option>Brazilian / Afro-Brazilian</option>
-            <option>Brazilian / Euro-Brazilian</option>
-            <option>Indigenous / Native American</option>
-            <option>Caribbean / Afro-Caribbean</option>
-          </optgroup>
-          <optgroup label="Pacific &amp; Oceania">
-            <option>Māori / Pacific Islander</option>
-            <option>Aboriginal Australian</option>
-            <option>Hawaiian / Polynesian</option>
-          </optgroup>
-          <optgroup label="Mixed &amp; Other">
-            <option>Mixed — Black &amp; White</option>
-            <option>Mixed — Asian &amp; White</option>
-            <option>Mixed — Asian &amp; Black</option>
-            <option>Mixed — Hispanic &amp; White</option>
-            <option>Mixed — Multiple</option>
-            <option>Other / Unspecified</option>
-          </optgroup>
-        </select>
+      <div class="fg"><label class="fl">Name</label><input type="text" class="fi" id="wizName" placeholder="Character name…" autocomplete="off"></div>
+      <div class="fg">
+        <label class="fl">Describe your character <span style="color:var(--muted);font-weight:400;text-transform:none">— look, age, vibe, anything</span></label>
+        <textarea class="fi" id="wizDesc" rows="6" placeholder="e.g. A 26-year-old Japanese woman with long wavy black hair and bright green eyes. Athletic build, confident and mysterious. Has a small tattoo on her wrist and a sharp, angular jawline…
+
+Or just: blonde, blue eyes, early 30s, curvy, warm and playful"></textarea>
       </div>
     </div>
 
-    <!-- Step 1: Build -->
+    <!-- Step 1: Portrait Preview -->
     <div class="wstep" id="wstep1">
-      <div class="fg"><label class="fl">Height</label>
-        <select class="fi" id="wizHeight">
-          <option value="">Select height…</option>
-          <option>Petite (under 5'2")</option><option>Short (5'2"–5'4")</option>
-          <option>Average (5'5"–5'6")</option><option>Tall (5'7"–5'9")</option><option>Very tall (5'10"+)</option>
-        </select>
-      </div>
-      <div class="fg">
-        <label class="fl">Body Type</label>
-        <div class="chips" id="wizBodyC">
-          <div class="chip" data-val="slim, slender body" onclick="selChip(this,'wizBodyC')">Slim</div>
-          <div class="chip" data-val="athletic, toned body" onclick="selChip(this,'wizBodyC')">Athletic</div>
-          <div class="chip" data-val="average build" onclick="selChip(this,'wizBodyC')">Average</div>
-          <div class="chip" data-val="curvaceous, voluptuous body" onclick="selChip(this,'wizBodyC')">Curvaceous</div>
-          <div class="chip" data-val="plus-size body, full figured" onclick="selChip(this,'wizBodyC')">Plus-size</div>
-          <div class="chip" data-val="petite compact body" onclick="selChip(this,'wizBodyC')">Petite</div>
-        </div>
-      </div>
-      <div class="fg" id="wizBustGrp">
-        <label class="fl">Breast Size</label>
-        <div class="chips" id="wizBustC">
-          <div class="chip" data-val="flat chest, small breasts, A cup" onclick="selChip(this,'wizBustC')">A / Flat</div>
-          <div class="chip" data-val="small B cup breasts" onclick="selChip(this,'wizBustC')">B cup</div>
-          <div class="chip" data-val="C cup breasts" onclick="selChip(this,'wizBustC')">C cup</div>
-          <div class="chip" data-val="large D cup breasts" onclick="selChip(this,'wizBustC')">D cup</div>
-          <div class="chip" data-val="large DD cup breasts, E cup" onclick="selChip(this,'wizBustC')">DD/E cup</div>
-          <div class="chip" data-val="huge F cup breasts, very large bust" onclick="selChip(this,'wizBustC')">F+ cup</div>
-        </div>
-      </div>
-      <div class="fg"><label class="fl">Additional details <span style="color:var(--muted);text-transform:none">(optional)</span></label>
-        <textarea class="fi" id="wizMeas" rows="3" placeholder="Waist, hips, distinctive features…"></textarea>
-      </div>
-    </div>
-
-    <!-- Step 2: Face -->
-    <div class="wstep" id="wstep2">
-      <div class="fg">
-        <label class="fl">Face Shape</label>
-        <div class="chips" id="wizFaceC">
-          <div class="chip" data-val="oval face shape" onclick="selChip(this,'wizFaceC')">Oval</div>
-          <div class="chip" data-val="round face shape" onclick="selChip(this,'wizFaceC')">Round</div>
-          <div class="chip" data-val="heart-shaped face" onclick="selChip(this,'wizFaceC')">Heart</div>
-          <div class="chip" data-val="square jawline" onclick="selChip(this,'wizFaceC')">Square</div>
-          <div class="chip" data-val="angular face" onclick="selChip(this,'wizFaceC')">Angular</div>
-          <div class="chip" data-val="soft delicate features" onclick="selChip(this,'wizFaceC')">Delicate</div>
-        </div>
-      </div>
-      <div class="fg">
-        <label class="fl">Eye Color</label>
-        <div class="chips" id="wizEyeC">
-          <div class="chip" data-val="dark brown eyes" onclick="selChip(this,'wizEyeC')">Dark Brown</div>
-          <div class="chip" data-val="light brown eyes" onclick="selChip(this,'wizEyeC')">Light Brown</div>
-          <div class="chip" data-val="amber eyes" onclick="selChip(this,'wizEyeC')">Amber</div>
-          <div class="chip" data-val="hazel eyes" onclick="selChip(this,'wizEyeC')">Hazel</div>
-          <div class="chip" data-val="green eyes" onclick="selChip(this,'wizEyeC')">Green</div>
-          <div class="chip" data-val="blue eyes" onclick="selChip(this,'wizEyeC')">Blue</div>
-          <div class="chip" data-val="light blue eyes, pale blue eyes" onclick="selChip(this,'wizEyeC')">Ice Blue</div>
-          <div class="chip" data-val="grey eyes" onclick="selChip(this,'wizEyeC')">Grey</div>
-          <div class="chip" data-val="blue-grey eyes" onclick="selChip(this,'wizEyeC')">Blue-Grey</div>
-          <div class="chip" data-val="grey-green eyes" onclick="selChip(this,'wizEyeC')">Grey-Green</div>
-          <div class="chip" data-val="dark eyes, black eyes" onclick="selChip(this,'wizEyeC')">Black</div>
-          <div class="chip" data-val="violet eyes, purple eyes" onclick="selChip(this,'wizEyeC')">Violet</div>
-          <div class="chip" data-val="heterochromia, different colored eyes" onclick="selChip(this,'wizEyeC')">Heterochromia</div>
-        </div>
-      </div>
-      <div class="fg">
-        <label class="fl">Hair Color</label>
-        <div class="chips" id="wizHairColC">
-          <div class="chip" data-val="jet black hair" onclick="selChip(this,'wizHairColC')">Jet Black</div>
-          <div class="chip" data-val="black hair" onclick="selChip(this,'wizHairColC')">Black</div>
-          <div class="chip" data-val="dark brown hair, espresso hair" onclick="selChip(this,'wizHairColC')">Dark Brown</div>
-          <div class="chip" data-val="medium brown hair, chestnut hair" onclick="selChip(this,'wizHairColC')">Chestnut</div>
-          <div class="chip" data-val="light brown hair, caramel hair" onclick="selChip(this,'wizHairColC')">Caramel</div>
-          <div class="chip" data-val="dirty blonde hair, dark blonde hair" onclick="selChip(this,'wizHairColC')">Dirty Blonde</div>
-          <div class="chip" data-val="blonde hair, golden blonde hair" onclick="selChip(this,'wizHairColC')">Golden Blonde</div>
-          <div class="chip" data-val="platinum blonde hair, white blonde hair" onclick="selChip(this,'wizHairColC')">Platinum</div>
-          <div class="chip" data-val="strawberry blonde hair" onclick="selChip(this,'wizHairColC')">Strawberry Blonde</div>
-          <div class="chip" data-val="auburn hair, warm red-brown hair" onclick="selChip(this,'wizHairColC')">Auburn</div>
-          <div class="chip" data-val="red hair, copper hair" onclick="selChip(this,'wizHairColC')">Red / Copper</div>
-          <div class="chip" data-val="burgundy hair, dark red hair" onclick="selChip(this,'wizHairColC')">Burgundy</div>
-          <div class="chip" data-val="silver hair, grey hair" onclick="selChip(this,'wizHairColC')">Silver / Grey</div>
-          <div class="chip" data-val="white hair" onclick="selChip(this,'wizHairColC')">White</div>
-          <div class="chip" data-val="pastel pink hair" onclick="selChip(this,'wizHairColC')">Pastel Pink</div>
-          <div class="chip" data-val="pink hair" onclick="selChip(this,'wizHairColC')">Pink</div>
-          <div class="chip" data-val="purple hair, violet hair" onclick="selChip(this,'wizHairColC')">Purple</div>
-          <div class="chip" data-val="blue hair, ocean blue hair" onclick="selChip(this,'wizHairColC')">Blue</div>
-          <div class="chip" data-val="ombre hair, two-tone hair" onclick="selChip(this,'wizHairColC')">Ombré</div>
-          <div class="chip" data-val="highlighted hair, balayage" onclick="selChip(this,'wizHairColC')">Highlights</div>
-        </div>
-      </div>
-      <div class="fg">
-        <label class="fl">Hair Length</label>
-        <div class="chips" id="wizHairLenC">
-          <div class="chip" data-val="pixie cut" onclick="selChip(this,'wizHairLenC')">Pixie</div>
-          <div class="chip" data-val="short hair" onclick="selChip(this,'wizHairLenC')">Short</div>
-          <div class="chip" data-val="shoulder length hair" onclick="selChip(this,'wizHairLenC')">Shoulder</div>
-          <div class="chip" data-val="medium length hair" onclick="selChip(this,'wizHairLenC')">Medium</div>
-          <div class="chip" data-val="long hair" onclick="selChip(this,'wizHairLenC')">Long</div>
-          <div class="chip" data-val="very long hair" onclick="selChip(this,'wizHairLenC')">Very Long</div>
-        </div>
-      </div>
-      <div class="fg">
-        <label class="fl">Hair Style</label>
-        <div class="chips" id="wizHairStC">
-          <div class="chip" data-val="straight hair" onclick="selChip(this,'wizHairStC')">Straight</div>
-          <div class="chip" data-val="wavy hair" onclick="selChip(this,'wizHairStC')">Wavy</div>
-          <div class="chip" data-val="curly hair" onclick="selChip(this,'wizHairStC')">Curly</div>
-          <div class="chip" data-val="braided hair" onclick="selChip(this,'wizHairStC')">Braided</div>
-          <div class="chip" data-val="hair in ponytail" onclick="selChip(this,'wizHairStC')">Ponytail</div>
-          <div class="chip" data-val="hair in bun" onclick="selChip(this,'wizHairStC')">Bun</div>
-        </div>
-      </div>
-      <div class="fg"><label class="fl">Distinctive Features <span style="color:var(--muted);text-transform:none">(optional)</span></label>
-        <textarea class="fi" id="wizFeat" rows="2" placeholder="Freckles, dimples, scar, tattoos…"></textarea>
-      </div>
-    </div>
-
-    <!-- Step 3: Personality -->
-    <div class="wstep" id="wstep3">
-      <div class="fg">
-        <label class="fl">Personality Traits</label>
-        <div class="chips" id="wizTraitsC">
-          <div class="chip" data-val="confident" onclick="togChip(this)">Confident</div>
-          <div class="chip" data-val="mysterious" onclick="togChip(this)">Mysterious</div>
-          <div class="chip" data-val="playful" onclick="togChip(this)">Playful</div>
-          <div class="chip" data-val="intelligent" onclick="togChip(this)">Intelligent</div>
-          <div class="chip" data-val="caring" onclick="togChip(this)">Caring</div>
-          <div class="chip" data-val="fierce" onclick="togChip(this)">Fierce</div>
-          <div class="chip" data-val="gentle" onclick="togChip(this)">Gentle</div>
-          <div class="chip" data-val="dominant" onclick="togChip(this)">Dominant</div>
-          <div class="chip" data-val="submissive" onclick="togChip(this)">Submissive</div>
-          <div class="chip" data-val="witty" onclick="togChip(this)">Witty</div>
-          <div class="chip" data-val="damaged" onclick="togChip(this)">Damaged</div>
-          <div class="chip" data-val="ambitious" onclick="togChip(this)">Ambitious</div>
-        </div>
-      </div>
-      <div class="fg"><label class="fl">Notes <span style="color:var(--muted);text-transform:none">(optional)</span></label>
-        <textarea class="fi" id="wizNotes" rows="3" placeholder="Background, quirks, anything extra…"></textarea>
-      </div>
-    </div>
-
-    <!-- Step 4: Portrait Preview -->
-    <div class="wstep" id="wstep4">
-      <p style="font-size:13px;color:var(--muted);margin-bottom:4px;line-height:1.5">A portrait is generated from your character's details. You can regenerate before saving.</p>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:4px;line-height:1.5">A portrait will be generated from your description. You can regenerate before saving.</p>
       <div class="wizPortBox" id="wizPortBox">
         <div class="wGenOv" id="wGenOv"><div class="bigSpin"></div><p class="genHint" id="wGenHint">Building prompt…</p></div>
       </div>
@@ -709,12 +501,9 @@ textarea.fi{resize:none;line-height:1.5}
       <button class="btn btnA btnFull" onclick="wizGenPortrait()" id="wizRegenBtn" style="margin-top:10px">↻ Regenerate Portrait</button>
     </div>
 
-    <!-- Step 5: Name & Save -->
-    <div class="wstep" id="wstep5">
-      <div style="margin-bottom:20px">
-        <p style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:16px">Almost done — give your character a name.</p>
-        <div class="fg"><label class="fl">Name</label><input type="text" class="fi" id="wizName" placeholder="Character name…" autocomplete="off"></div>
-      </div>
+    <!-- Step 2: Save -->
+    <div class="wstep" id="wstep2">
+      <p style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:16px">Your character is ready. You can add more portraits and refine details from the character page.</p>
       <div id="wizSummary"></div>
     </div>
 
@@ -783,6 +572,7 @@ textarea.fi{resize:none;line-height:1.5}
     <span class="fsSeedL" id="fsSeed"></span>
     <div style="display:flex;gap:8px">
       <button class="fsRefBtn" id="fsRefBtn" onclick="toggleFaceRef()">☆ Set as Face</button>
+      <button class="fsRefBtn" id="fsUpscaleBtn" onclick="upscalePortrait()">↑ Upscale 2×</button>
       <button class="fsDelBtn" id="fsDelBtn">Delete</button>
     </div>
   </div>
@@ -1323,7 +1113,7 @@ const STYLES = [
   {label:'Vintage',   desc:'Retro 70s/80s film aesthetic',          prompt:'vintage photography, retro 1970s aesthetic, warm faded tones, nostalgic, film halation, classic grain',   tail:'solo, warm vintage light, retro'},
 ];
 
-const NEG = '(worst quality, low quality:1.4), (deformed, distorted:1.3), bad anatomy, (bad hands:1.3), (malformed hands:1.3), extra fingers, missing fingers, fused fingers, (extra limbs:1.2), mutated hands, blurry, ugly, watermark, text, signature, jpeg artifacts, censored, mosaic, (ai-generated look:1.2), overly perfect skin, studio lighting, fashion editorial';
+const NEG = '(worst quality, low quality:1.4), (deformed, distorted:1.3), bad anatomy, (bad hands:1.3), (malformed hands:1.3), extra fingers, missing fingers, fused fingers, (extra limbs:1.2), mutated hands, blurry, ugly, watermark, text, signature, jpeg artifacts, censored, mosaic, (ai-generated look:1.2), overly perfect skin, studio lighting, fashion editorial, (bad face:1.3), (ugly face:1.2), blurry face, asymmetrical face, disfigured face';
 
 const MODELS = [
   { id: 'lustify-sdxl', label: 'Lustify SDXL (default)' },
@@ -1381,7 +1171,7 @@ const LS={
 };
 const getChars=()=>LS.get('ps_chars',[]);
 const saveChars=c=>LS.set('ps_chars',c);
-const getSettings=()=>LS.get('ps_settings',{veniceKey:'',orKey:'',model:'lustify-sdxl'});
+const getSettings=()=>LS.get('ps_settings',{veniceKey:'',orKey:'',model:'lustify-sdxl',steps:30,cfgScale:7.5,resolution:'832x1216'});
 const getPresets=()=>LS.get('ps_presets',[]);
 const savePresets=p=>LS.set('ps_presets',p);
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
@@ -1784,12 +1574,52 @@ function delPreset(e,id){
 }
 
 // ── Prompt Building ──
+function buildNLFallback(char,pose,clothing,state,toggles){
+  const parts=[];
+  const qualityAnchor='score_9, score_8_up, score_7_up, masterpiece, (photorealistic:1.3), (RAW photo:1.2), ultra detailed, 8k, (sharp focus:1.1)';
+  parts.push(qualityAnchor);
+
+  if(pose){
+    const poseTags=pose.prompt.split(',').map(t=>`(${t.trim()}:1.15)`).join(', ');
+    parts.push(poseTags);
+  }
+
+  const fem=char.gender==='Female'||char.gender==='Non-binary';
+  if(fem)parts.push('facing camera, front view, looking at viewer');
+
+  // NL description is used directly as SD tags — the OR expander will polish it
+  // For fallback path, wrap descriptive phrases as weighted tags
+  const desc=char.nlDescription||'';
+  if(desc)parts.push(desc);
+  else parts.push(`${fem?'woman':'man'}`);
+
+  // Clothing
+  if(clothing){parts.push(clothing.prompt)}
+  else if(state){parts.push(state)}
+
+  // Toggles
+  if(toggles){
+    if(toggles.wet)parts.push('wet skin, wet hair, glistening body');
+    if(toggles.oiled)parts.push('oiled skin, shiny skin');
+    if(toggles.lingerie)parts.push('wearing lingerie');
+  }
+
+  if(activeStyle){
+    parts.push(activeStyle.prompt);
+    parts.push(activeStyle.tail);
+  } else {
+    parts.push('solo, beautiful lighting, professional photography, high resolution');
+  }
+
+  return parts.filter(Boolean).join(', ');
+}
+
 function buildFallback(char,pose,clothing,state,toggles){
   const fem=char.gender==='Female'||char.gender==='Non-binary';
   const parts=[];
 
   // 1. Quality anchors
-  parts.push('score_9, score_8_up, score_7_up, masterpiece, (photorealistic:1.3), ultra detailed, 8k');
+  parts.push('score_9, score_8_up, score_7_up, masterpiece, (photorealistic:1.3), (RAW photo:1.2), ultra detailed, 8k, (sharp focus:1.1)');
 
   // 2. Pose FIRST — each tag weighted individually (SD syntax requires no commas inside parentheses)
   if(pose){
@@ -2040,8 +1870,8 @@ ${fem&&clothing&&(clothing.label==='Nude'||clothing.label==='Topless')?'Add: bre
 }
 
 async function expandPromptOR(basePrompt,orKey){
-  const sys=`You are a Stable Diffusion prompt engineer. You will receive an SD tag prompt. Expand and improve it — add more specific detail to the physical description, ensure proper SD weighting syntax, and improve tag variety. Preserve all existing tags and their weights. Output ONLY the improved comma-separated tag list. No explanation.`;
-  const usr=`Expand this SD prompt: ${basePrompt}`;
+  const sys=`You are a Stable Diffusion prompt engineer specialising in photorealistic portraits. You will receive either an SD tag prompt or a natural-language character description mixed with SD tags. Convert or expand it into a polished SD tag prompt by: extracting all physical descriptors (age, ethnicity, hair, eyes, body) as precise SD tags, adding skin texture detail (pores, skin tone nuance), lighting quality (soft shadows, light direction, catchlights in eyes), depth of field (shallow focus, background blur), facial detail (defined lips, detailed iris, natural eyebrows). Use proper SD weighting syntax — weight identity-critical tags at 1.1, pose tags at 1.15. Preserve ALL existing tags and their exact weights. Output ONLY the final comma-separated tag list. No explanation, no markdown.`;
+  const usr=`Convert/expand this into a polished SD portrait prompt: ${basePrompt}`;
   const resp=await fetch('https://openrouter.ai/api/v1/chat/completions',{
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+orKey},
@@ -2062,8 +1892,10 @@ async function expandPromptOR(basePrompt,orKey){
 }
 
 async function buildPrompt(char,pose,clothing,state,toggles,orKey){
-  // Stage 1: Always build a strong base prompt
-  let prompt=buildFallback(char,pose,clothing,state,toggles);
+  // Stage 1: Build base prompt — NL path for natural-language characters, structured path otherwise
+  let prompt=char.nlDescription
+    ?buildNLFallback(char,pose,clothing,state,toggles)
+    :buildFallback(char,pose,clothing,state,toggles);
   // Stage 2: If OpenRouter available, expand/polish the base prompt with AI
   if(orKey){
     try{prompt=await expandPromptOR(prompt,orKey)}
@@ -2071,11 +1903,11 @@ async function buildPrompt(char,pose,clothing,state,toggles,orKey){
   }
   // Inject face reference after quality anchors (not before them) so score_9 stays first
   if(char.facePrompt){
-    const qualityAnchor='score_9, score_8_up, score_7_up, masterpiece, (photorealistic:1.3), ultra detailed, 8k';
+    const qualityAnchor='score_9, score_8_up, score_7_up, masterpiece, (photorealistic:1.3), (RAW photo:1.2), ultra detailed, 8k, (sharp focus:1.1)';
     if(prompt.includes(qualityAnchor)){
-      prompt=prompt.replace(qualityAnchor,`${qualityAnchor}, (${char.facePrompt}:1.2)`);
+      prompt=prompt.replace(qualityAnchor,`${qualityAnchor}, (${char.facePrompt}:1.3)`);
     } else {
-      prompt=`(${char.facePrompt}:1.2), `+prompt;
+      prompt=`(${char.facePrompt}:1.3), `+prompt;
     }
   }
   return prompt;
@@ -2096,12 +1928,15 @@ async function callVenice(prompt,seed,model,key,onStage,_retry=false){
   onStage&&onStage('queued',_retry?'Retrying…':'Queued — waiting for Venice…');
   const t0=Date.now();
   const reqModel=model||'lustify-sdxl';
+  const qs=getSettings();
+  const qSteps=qs.steps||30,qCfg=qs.cfgScale||7.5;
+  const [qW,qH]=(qs.resolution||'832x1216').split('x').map(Number);
   _genLogLine(`--- Venice request ${_retry?'#2 (retry)':'#1'} ---`);
-  _genLogLine(`model=${reqModel} | seed=${seed} | width=832 | height=1216 | steps=30 | cfg=7.5 | safe_mode=false`);
+  _genLogLine(`model=${reqModel} | seed=${seed} | width=${qW} | height=${qH} | steps=${qSteps} | cfg=${qCfg} | safe_mode=false`);
   const resp=await fetch('https://api.venice.ai/api/v1/image/generate',{
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-    body:JSON.stringify({model:reqModel,prompt,negative_prompt:NEG,width:832,height:1216,steps:30,cfg_scale:7.5,seed,safe_mode:false,return_binary:false})
+    body:JSON.stringify({model:reqModel,prompt,negative_prompt:NEG,width:qW,height:qH,steps:qSteps,cfg_scale:qCfg,seed,safe_mode:false,return_binary:false})
   });
   const elapsed=((Date.now()-t0)/1000).toFixed(1);
   _genLogLine(`HTTP ${resp.status} ${resp.statusText} in ${elapsed}s`);
@@ -2259,6 +2094,38 @@ async function fsNav(dir){
 }
 function closeFS(){$('portFS').classList.remove('open');curFsId=null}
 
+async function upscalePortrait(){
+  if(!curFsId)return;
+  const s=getSettings();
+  if(!s.veniceKey){toast('Venice API key required');return}
+  const btn=$('fsUpscaleBtn');if(btn){btn.disabled=true;btn.textContent='Upscaling…'}
+  try{
+    const p=await DB.get(curFsId);if(!p)throw new Error('Portrait not found');
+    const resp=await fetch('https://api.venice.ai/api/v1/image/upscale',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+s.veniceKey},
+      body:JSON.stringify({image:'data:image/png;base64,'+p.imageData,scale:2})
+    });
+    if(!resp.ok){const t=await resp.text();throw new Error(`Upscale ${resp.status}: ${t.slice(0,200)}`)}
+    const d=await resp.json();
+    let b64=null;
+    if(d.images?.[0])b64=typeof d.images[0]==='string'?d.images[0]:d.images[0].b64_json||d.images[0].url;
+    else if(d.data?.[0])b64=d.data[0].b64_json||d.data[0].url;
+    if(!b64)throw new Error('No image in upscale response');
+    b64=b64.replace(/^data:image\/\w+;base64,/,'');
+    const rec={characterId:p.characterId,imageData:b64,prompt:p.prompt+'[upscaled 2×]',seed:p.seed,model:p.model+'-upscaled',poseLabel:p.poseLabel||'',clothingLabel:p.clothingLabel||'',createdAt:Date.now()};
+    const newId=await DB.add(rec);
+    curPortraits=await DB.forChar(p.characterId);
+    const char=getChars().find(c=>c.id===p.characterId);
+    if(char)renderCarousel(char);
+    toast('Upscaled portrait saved ✦');
+    await openFS(newId);
+  }catch(err){
+    console.error(err);
+    toast('Upscale failed: '+err.message.slice(0,60));
+  }finally{if(btn){btn.disabled=false;btn.textContent='↑ Upscale 2×'}}
+}
+
 // ── Face Reference ──
 async function toggleFaceRef(){
   if(!curFsId||!curCharId)return;
@@ -2387,27 +2254,10 @@ function wizSaveSession(){
     const state={
       step:wizStep,
       fields:{
-        wizAge:$('wizAge')?.value||'',
-        wizMeas:$('wizMeas')?.value||'',
-        wizFeat:$('wizFeat')?.value||'',
-        wizNotes:$('wizNotes')?.value||'',
         wizName:$('wizName')?.value||'',
-        wizEthn:$('wizEthn')?.value||'',
-        wizHeight:$('wizHeight')?.value||'',
-        wizStoryRole:$('wizStoryRole')?.value||'',
-        wizDynamic:$('wizDynamic')?.value||'',
+        wizDesc:$('wizDesc')?.value||'',
       },
-      chips:{
-        wizGenderC:getChipV('wizGenderC'),
-        wizBodyC:getChipV('wizBodyC'),
-        wizBustC:getChipV('wizBustC'),
-        wizFaceC:getChipV('wizFaceC'),
-        wizEyeC:getChipV('wizEyeC'),
-        wizHairColC:getChipV('wizHairColC'),
-        wizHairLenC:getChipV('wizHairLenC'),
-        wizHairStC:getChipV('wizHairStC'),
-        wizTraitsC:getMulChipV('wizTraitsC'),
-      }
+      chips:{wizGenderC:getChipV('wizGenderC')}
     };
     sessionStorage.setItem('gogo_wiz',JSON.stringify(state));
   }catch(e){}
@@ -2418,42 +2268,26 @@ function wizClearSession(){
 }
 
 function wizRestoreSession(state){
-  // Text fields
-  Object.entries(state.fields||{}).forEach(([id,val])=>{
-    const el=$(id);if(el)el.value=val;
-  });
-  // Single-select chips
-  const singleChips=['wizGenderC','wizBodyC','wizBustC','wizFaceC','wizEyeC','wizHairColC','wizHairLenC','wizHairStC'];
-  singleChips.forEach(gid=>{
-    const val=state.chips?.[gid];if(!val)return;
-    const el=$(gid);if(!el)return;
-    el.querySelectorAll('.chip').forEach(c=>c.classList.toggle('sel',c.dataset.val===val));
-  });
-  // Multi-select chips (traits)
-  const traits=state.chips?.wizTraitsC||[];
-  const tc=$('wizTraitsC');
-  if(tc)tc.querySelectorAll('.chip').forEach(c=>c.classList.toggle('sel',traits.includes(c.dataset.val)));
-  // Bust group visibility
-  const gender=state.chips?.wizGenderC;
-  const bg=$('wizBustGrp');if(bg)bg.style.display=gender==='Male'?'none':'';
+  Object.entries(state.fields||{}).forEach(([id,val])=>{const el=$(id);if(el)el.value=val});
+  const genderVal=state.chips?.wizGenderC;
+  if(genderVal){
+    const gc=$('wizGenderC');
+    if(gc)gc.querySelectorAll('.chip').forEach(c=>c.classList.toggle('sel',c.dataset.val===genderVal));
+  }
 }
 
 function openWizard(){
-  // Check for saved session
   let savedState=null;
   try{const raw=sessionStorage.getItem('gogo_wiz');if(raw)savedState=JSON.parse(raw)}catch(e){}
 
   wizStep=savedState?.step||0;
   wizData={};wizPortrait=null;
 
-  // Reset all fields first
-  ['wizName','wizAge','wizMeas','wizFeat','wizNotes'].forEach(id=>{const e=$(id);if(e)e.value=''});
-  ['wizGenderC','wizBodyC','wizBustC','wizFaceC','wizEyeC','wizHairColC','wizHairLenC','wizHairStC','wizTraitsC'].forEach(id=>{
-    const el=$(id);if(!el)return;
-    el.querySelectorAll('.chip').forEach((c,i)=>c.classList.toggle('sel',i===0&&id==='wizGenderC'));
-  });
+  // Reset fields
+  ['wizName','wizDesc'].forEach(id=>{const e=$(id);if(e)e.value=''});
+  const gc=$('wizGenderC');
+  if(gc)gc.querySelectorAll('.chip').forEach((c,i)=>c.classList.toggle('sel',i===0));
 
-  // Restore saved state if present
   if(savedState){
     wizRestoreSession(savedState);
     toast('Resuming where you left off');
@@ -2470,22 +2304,20 @@ function updateWiz(){
     if(i<wizStep)el.classList.add('done');else if(i===wizStep)el.classList.add('active');
   });
   document.querySelectorAll('.wstep').forEach((el,i)=>el.classList.toggle('active',i===wizStep));
-  const titles=['Identity','Build','Appearance','Personality','Portrait Preview','Name & Save'];
+  const titles=['Describe Character','Portrait Preview','Save'];
   $('wizTitle').textContent=titles[wizStep]||'New Character';
   const back=$('wizBack'),next=$('wizNext');
   if(back)back.style.display=wizStep===0?'none':'';
-  if(next)next.textContent=wizStep===5?'Save Character':'Continue';
-  const gender=getChipV('wizGenderC');
-  const bustG=$('wizBustGrp');if(bustG)bustG.style.display=gender==='Male'?'none':'';
-  if(wizStep===5){renderWizSummary()}
+  if(next)next.textContent=wizStep===2?'Save Character':'Continue';
+  if(wizStep===2)renderWizSummary();
 }
 
 function wizNext(){
   wizSaveSession();
-  if(wizStep===5){saveWizChar();return}
-  wizStep=Math.min(wizStep+1,5);
+  if(wizStep===2){saveWizChar();return}
+  wizStep=Math.min(wizStep+1,2);
   updateWiz();
-  if(wizStep===4)wizGenPortrait();
+  if(wizStep===1)wizGenPortrait();
 }
 function wizBack(){wizSaveSession();wizStep=Math.max(wizStep-1,0);updateWiz()}
 
@@ -2529,16 +2361,19 @@ async function wizGenPortrait(){
 
 function gatherWizData(){
   return{
-    id:uid(),name:$('wizName').value.trim(),gender:getChipV('wizGenderC'),
-    age:$('wizAge').value,ethnicity:$('wizEthn').value,
-    build:{height:$('wizHeight').value,bodyType:getChipV('wizBodyC'),breastSize:getChipV('wizBustC'),measurements:$('wizMeas').value},
-    face:{faceShape:getChipV('wizFaceC'),eyeColor:getChipV('wizEyeC'),hairColor:getChipV('wizHairColC'),hairLength:getChipV('wizHairLenC'),hairStyle:getChipV('wizHairStC'),features:$('wizFeat').value},
-    personality:{traits:getMulChipV('wizTraitsC'),notes:$('wizNotes')?$('wizNotes').value:''}
+    id:uid(),
+    name:$('wizName')?.value.trim()||'',
+    gender:getChipV('wizGenderC'),
+    age:'',ethnicity:'',
+    build:{height:'',bodyType:'',breastSize:'',measurements:''},
+    face:{faceShape:'',eyeColor:'',hairColor:'',hairLength:'',hairStyle:'',features:''},
+    personality:{traits:[],notes:''},
+    nlDescription:$('wizDesc')?.value.trim()||''
   };
 }
 
 async function saveWizChar(){
-  const name=$('wizName').value.trim();if(!name){toast('Enter a name');return}
+  const name=$('wizName')?.value.trim()||'';if(!name){toast('Enter a name');return}
   const char=gatherWizData();char.name=name;char.id=uid();char.createdAt=Date.now();
   const chars=getChars();chars.push(char);saveChars(chars);
   if(wizPortrait)await DB.add({characterId:char.id,imageData:wizPortrait.imageData,prompt:wizPortrait.prompt,seed:wizPortrait.seed,model:wizPortrait.model,poseLabel:'',clothingLabel:'',createdAt:Date.now()});
@@ -2551,15 +2386,15 @@ async function saveWizChar(){
 function renderWizSummary(){
   const el=$('wizSummary');if(!el)return;
   const c=gatherWizData();
-  const items=[c.gender,c.age?`Age ${c.age}`:'',c.ethnicity||'',c.build?.bodyType||'',[c.face?.hairColor,c.face?.hairLength].filter(Boolean).join(' ')].filter(Boolean);
-  el.innerHTML=`<div class="infoCard">${items.map(i=>`<div class="infoRow"><span class="iVal">${esc(i)}</span></div>`).join('')}</div>`;
+  const desc=c.nlDescription?c.nlDescription.slice(0,120)+(c.nlDescription.length>120?'…':''):'';
+  const rows=[[c.name||'(unnamed)','Name'],[c.gender||'','Gender'],[desc,'Description']].filter(r=>r[0]);
+  el.innerHTML=`<div class="infoCard">${rows.map(([v,l])=>`<div class="infoRow"><span class="iKey">${esc(l)}</span><span class="iVal">${esc(v)}</span></div>`).join('')}</div>`;
 }
 
 // ── Chip Helpers ──
 function getChipV(gid){const el=$(gid);if(!el)return'';const s=el.querySelector('.chip.sel');return s?s.dataset.val:''}
 function getMulChipV(gid){const el=$(gid);if(!el)return[];return[...el.querySelectorAll('.chip.sel')].map(c=>c.dataset.val)}
-function selChip(el,gid){$(gid).querySelectorAll('.chip').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');
-  if(gid==='wizGenderC'){const g=el.dataset.val;const bg=$('wizBustGrp');if(bg)bg.style.display=g==='Male'?'none':''}}
+function selChip(el,gid){$(gid).querySelectorAll('.chip').forEach(c=>c.classList.remove('sel'));el.classList.add('sel')}
 function togChip(el){el.classList.toggle('sel')}
 
 // ── Settings ──
@@ -2616,6 +2451,11 @@ function syncSettings(){
   if(ok)ok.value=s.orKey||'';
   if(m)m.value=s.model||'lustify-sdxl';
   if(vb)vb.textContent='v'+VERSION;
+  const stepsEl=$('sSteps'),cfgEl=$('sCfg');
+  if(stepsEl){stepsEl.value=s.steps||30;$('stepsVal').textContent=stepsEl.value}
+  if(cfgEl){cfgEl.value=s.cfgScale||7.5;$('cfgVal').textContent=parseFloat(cfgEl.value).toFixed(1)}
+  const resC=$('sResC');
+  if(resC){const rv=s.resolution||'832x1216';resC.querySelectorAll('.chip').forEach(c=>c.classList.toggle('sel',c.dataset.val===rv))}
   syncPinSettings();
   renderErrorLog();
   renderGenLog();
@@ -2625,7 +2465,10 @@ function saveSettingsNow(){
   LS.set('ps_settings',{
     veniceKey:$('sVeniceKey').value.trim(),
     orKey:$('sOrKey').value.trim(),
-    model:$('sModel').value
+    model:$('sModel').value,
+    steps:parseInt($('sSteps')?.value||30),
+    cfgScale:parseFloat($('sCfg')?.value||7.5),
+    resolution:getChipV('sResC')||'832x1216'
   });
 }
 
