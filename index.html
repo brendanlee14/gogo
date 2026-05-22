@@ -1891,15 +1891,71 @@ async function expandPromptOR(basePrompt,orKey){
   return result.trim()||basePrompt;
 }
 
-async function buildPrompt(char,pose,clothing,state,toggles,orKey){
-  // Stage 1: Build base prompt — NL path for natural-language characters, structured path otherwise
-  let prompt=char.nlDescription
-    ?buildNLFallback(char,pose,clothing,state,toggles)
-    :buildFallback(char,pose,clothing,state,toggles);
-  // Stage 2: If OpenRouter available, expand/polish the base prompt with AI
-  if(orKey){
-    try{prompt=await expandPromptOR(prompt,orKey)}
-    catch(e){console.warn('OR expansion failed, using base prompt:',e)}
+async function buildNLPromptOR(char,pose,clothing,state,toggles,orKey,onStage){
+  const fem=char.gender==='Female'||char.gender==='Non-binary';
+  const qualityAnchor='score_9, score_8_up, score_7_up, masterpiece, (photorealistic:1.3), (RAW photo:1.2), ultra detailed, 8k, (sharp focus:1.1)';
+  const ctx=[];
+  if(pose)ctx.push(`Pose: ${pose.prompt}`);
+  if(clothing)ctx.push(`Clothing: ${clothing.prompt}`);
+  else if(state)ctx.push(`State: ${state}`);
+  if(toggles?.wet)ctx.push('Modifier: wet skin, wet hair, glistening body');
+  if(toggles?.oiled)ctx.push('Modifier: oiled skin, shiny skin');
+  if(activeStyle)ctx.push(`Photography style: ${activeStyle.prompt}`);
+  const ctxStr=ctx.length?`\nAdditional context — include these verbatim in output:\n${ctx.join('\n')}`:'';
+  const styleTail=activeStyle?activeStyle.tail:'solo, beautiful lighting, professional photography, high resolution';
+
+  const sys=`You are a Stable Diffusion prompt engineer for lustify-sdxl photorealistic portraits. Given a natural-language character description, output a complete, precise SD tag prompt. Rules:
+1. Start with EXACTLY this quality anchor: ${qualityAnchor}
+2. Then add all visual attributes extracted from the description: age ("X year old"), ethnicity, skin tone, body type${fem?', breast size (A/B/C/D/DD cup)':''}, hair (color+length+style), eye color, face shape, distinctive features (tattoos, freckles, piercings, scars)
+3. Weight key identity tags at 1.1, very distinctive features at 1.15
+4. Add photographic detail tags: skin texture (pores, skin tone nuance), lighting (soft shadows, light direction, catchlights in eyes), depth of field (shallow focus, background blur), facial detail (defined lips, detailed iris, natural eyebrows)
+5. Subject is ${fem?'woman':'man'}, facing camera, looking at viewer
+6. Include any additional context provided
+7. End with: ${styleTail}
+Output ONLY the comma-separated tag list. No explanation, no markdown, no preamble.`;
+
+  const usr=`${fem?'Female':'Male'} character: ${char.nlDescription}${ctxStr}`;
+  if(onStage)onStage('distil','Extracting character from description…');
+  const resp=await fetch('https://openrouter.ai/api/v1/chat/completions',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+orKey},
+    body:JSON.stringify({model:'deepseek/deepseek-v3-0324',messages:[{role:'system',content:sys},{role:'user',content:usr}],stream:true,max_tokens:700})
+  });
+  if(!resp.ok)throw new Error('OR distil '+resp.status);
+  const reader=resp.body.getReader(),dec=new TextDecoder();
+  let result='';
+  while(true){
+    const{done,value}=await reader.read();if(done)break;
+    for(const line of dec.decode(value).split('\n')){
+      if(line.startsWith('data: ')&&line!=='data: [DONE]'){
+        try{result+=(JSON.parse(line.slice(6)).choices?.[0]?.delta?.content||'')}catch{}
+      }
+    }
+  }
+  return result.trim()||null;
+}
+
+async function buildPrompt(char,pose,clothing,state,toggles,orKey,onStage){
+  let prompt;
+  if(char.nlDescription){
+    if(orKey){
+      try{
+        const nlPrompt=await buildNLPromptOR(char,pose,clothing,state,toggles,orKey,onStage);
+        prompt=nlPrompt||buildNLFallback(char,pose,clothing,state,toggles);
+      }catch(e){
+        console.warn('NL distil failed, using fallback:',e);
+        prompt=buildNLFallback(char,pose,clothing,state,toggles);
+      }
+    }else{
+      prompt=buildNLFallback(char,pose,clothing,state,toggles);
+    }
+  }else{
+    prompt=buildFallback(char,pose,clothing,state,toggles);
+    if(orKey){
+      if(onStage)onStage('expand','Expanding prompt with AI…');
+      try{prompt=await expandPromptOR(prompt,orKey)}
+      catch(e){console.warn('OR expansion failed, using base prompt:',e)}
+    }
   }
   // Inject face reference after quality anchors (not before them) so score_9 stays first
   if(char.facePrompt){
@@ -2030,8 +2086,8 @@ async function genPortrait(){
     genLogStart(char,seed,s.model,seedSrc,!!s.orKey);
     _genLogLine(`Pose: ${activePose?.label||'none'} | Clothing: ${activeClothing?.label||'none'} | State: ${activeState?.label||'none'} | Style: ${activeStyle?.label||'none'}`);
     _genLogLine(`Face ref: ${char.facePrompt?'yes ('+char.facePrompt.slice(0,60)+'…)':'none'}`);
-    setGenStage(stEl,'prompt',s.orKey?'Building AI prompt…':'Building prompt…');
-    const prompt=await buildPrompt(char,activePose,activeClothing,activeState,activeToggles,s.orKey);
+    setGenStage(stEl,'prompt',s.orKey&&char.nlDescription?'Extracting character…':s.orKey?'Building AI prompt…':'Building prompt…');
+    const prompt=await buildPrompt(char,activePose,activeClothing,activeState,activeToggles,s.orKey,(stage,detail)=>setGenStage(stEl,stage,detail));
     _genLogLine(`--- Prompt (${prompt.length} chars) ---`);
     _genLogLine(prompt);
     _genLogLine(`--- Negative (${NEG.length} chars) ---`);
@@ -2327,13 +2383,13 @@ async function wizGenPortrait(){
   const btn=$('wizRegenBtn');if(btn)btn.disabled=true;
   const ov=$('wGenOv'),hint=$('wGenHint');
   if(ov)ov.classList.remove('gone');
-  if(hint)hint.textContent=s.orKey?'Building AI prompt…':'Building prompt…';
   const onStage=(_stage,detail)=>{if(hint)hint.textContent=detail||'…'};
+  if(hint)hint.textContent=s.orKey?'Extracting character…':'Building prompt…';
   try{
     const wc=gatherWizData();
     const seed=Math.floor(Math.random()*999999999);
     genLogStart(wc,seed,s.model,'random (wizard)',!!s.orKey);
-    const prompt=await buildPrompt(wc,null,null,null,{},s.orKey);
+    const prompt=await buildPrompt(wc,null,null,null,{},s.orKey,onStage);
     _genLogLine(`--- Prompt (${prompt.length} chars) ---`);
     _genLogLine(prompt);
     _genLogLine(`--- Negative (${NEG.length} chars) ---`);
