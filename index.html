@@ -1186,6 +1186,7 @@ let curFsSorted=[],curFsIdx=0;
 let activeToggles={sheer:false,hardNipples:false,erect:false,holding:false};
 let seedVal='',seedLocked=false;
 let curFsId=null,wizStep=0,wizPortrait=null;
+let _veniceLLMModel=null;
 let gallerySearch='',gallerySort='newest',ctxCharId=null;
 
 // ── Navigation ──
@@ -1895,6 +1896,28 @@ async function expandPromptOR(basePrompt,orKey){
   return result.trim()||basePrompt;
 }
 
+async function resolveVeniceLLMModel(veniceKey){
+  if(_veniceLLMModel)return _veniceLLMModel;
+  try{
+    const r=await fetch('https://api.venice.ai/api/v1/models?type=text',{
+      headers:{'Authorization':'Bearer '+veniceKey}
+    });
+    if(!r.ok)throw new Error(r.status);
+    const d=await r.json();
+    const models=(d.data||[]).map(m=>m.id).filter(Boolean);
+    _genLogLine(`Venice text models available: [${models.join(', ')}]`);
+    // Prefer larger/uncensored models; fall back down the list
+    const preferred=['llama-3.3-70b','llama-3.1-405b','llama-3.1-70b','mistral-nemo-12b','nous-hermes-3','qwen'];
+    const pick=preferred.find(p=>models.some(m=>m.toLowerCase().includes(p)))||models[0];
+    const matched=models.find(m=>m.toLowerCase().includes(pick))||models[0];
+    _veniceLLMModel=matched||'llama-3.3-70b';
+  }catch(e){
+    _veniceLLMModel='llama-3.3-70b'; // hardcoded fallback
+  }
+  _genLogLine(`Using Venice LLM model: ${_veniceLLMModel}`);
+  return _veniceLLMModel;
+}
+
 async function buildNLPromptVenice(char,pose,clothing,state,toggles,veniceKey,onStage){
   const fem=char.gender==='Female'||char.gender==='Non-binary';
   const qualityAnchor='score_9, score_8_up, score_7_up, masterpiece, (photorealistic:1.3), (RAW photo:1.2), ultra detailed, 8k, (sharp focus:1.1)';
@@ -1919,7 +1942,9 @@ async function buildNLPromptVenice(char,pose,clothing,state,toggles,veniceKey,on
 Output ONLY the comma-separated tag list. No explanation, no markdown, no preamble.`;
 
   const usr=`${fem?'Female':'Male'} character: ${char.nlDescription}${ctxStr}`;
-  _genLogLine(`ℹ Sending ${char.nlDescription.length} char description to Venice LLM for distillation`);
+  if(onStage)onStage('distil','Resolving Venice LLM model…');
+  const llmModel=await resolveVeniceLLMModel(veniceKey);
+  _genLogLine(`ℹ Sending ${char.nlDescription.length} char description to Venice LLM (${llmModel}) for distillation`);
   if(onStage)onStage('distil','Extracting character from description…');
   const ctrl=new AbortController();
   const timeout=setTimeout(()=>ctrl.abort(),45000);
@@ -1929,7 +1954,7 @@ Output ONLY the comma-separated tag list. No explanation, no markdown, no preamb
       method:'POST',
       signal:ctrl.signal,
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+veniceKey},
-      body:JSON.stringify({model:'llama-3.3-70b',messages:[{role:'system',content:sys},{role:'user',content:usr}],stream:false,max_tokens:700})
+      body:JSON.stringify({model:llmModel,messages:[{role:'system',content:sys},{role:'user',content:usr}],stream:false,max_tokens:700})
     });
   }finally{clearTimeout(timeout);}
   if(!resp.ok){const errBody=await resp.text();throw new Error('Venice LLM distil '+resp.status+': '+errBody.slice(0,300));}
