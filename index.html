@@ -359,10 +359,19 @@ textarea.fi{resize:none;line-height:1.5}
         <label class="fl">Venice AI Key</label>
         <input type="password" class="fi" id="sVeniceKey" placeholder="venice-api-key…" autocomplete="off" oninput="saveSettingsNow()">
       </div>
-      <div class="fg" style="margin-bottom:0">
-        <label class="fl">OpenRouter Key <span style="color:var(--muted);text-transform:none;letter-spacing:0">(optional — smart prompts)</span></label>
+      <div class="fg">
+        <label class="fl">OpenRouter Key <span style="color:var(--muted);text-transform:none;letter-spacing:0">(optional)</span></label>
         <input type="password" class="fi" id="sOrKey" placeholder="sk-or-v1-…" autocomplete="off" oninput="saveSettingsNow()">
       </div>
+      <div class="fg">
+        <label class="fl">DeepSeek Key <span style="color:var(--muted);text-transform:none;letter-spacing:0">(optional — best NL distillation)</span></label>
+        <input type="password" class="fi" id="sDsKey" placeholder="sk-…" autocomplete="off" oninput="saveSettingsNow()">
+      </div>
+      <div class="fg" style="margin-bottom:0">
+        <label class="fl">Grok / xAI Key <span style="color:var(--muted);text-transform:none;letter-spacing:0">(optional)</span></label>
+        <input type="password" class="fi" id="sXaiKey" placeholder="xai-…" autocomplete="off" oninput="saveSettingsNow()">
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6">NL distillation priority: DeepSeek → Grok → Venice LLM. DeepSeek is recommended — uncensored, cheapest, highest quality structured output.</div>
     </div>
     <div class="sCard">
       <div class="sCardT">Image Model</div>
@@ -1171,7 +1180,7 @@ const LS={
 };
 const getChars=()=>LS.get('ps_chars',[]);
 const saveChars=c=>LS.set('ps_chars',c);
-const getSettings=()=>LS.get('ps_settings',{veniceKey:'',orKey:'',model:'lustify-sdxl',steps:30,cfgScale:7.5,resolution:'832x1216'});
+const getSettings=()=>LS.get('ps_settings',{veniceKey:'',orKey:'',dsKey:'',xaiKey:'',model:'lustify-sdxl',steps:30,cfgScale:7.5,resolution:'832x1216'});
 const getPresets=()=>LS.get('ps_presets',[]);
 const savePresets=p=>LS.set('ps_presets',p);
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
@@ -1899,26 +1908,20 @@ async function expandPromptOR(basePrompt,orKey){
 async function resolveVeniceLLMModel(veniceKey){
   if(_veniceLLMModel)return _veniceLLMModel;
   try{
-    const r=await fetch('https://api.venice.ai/api/v1/models?type=text',{
-      headers:{'Authorization':'Bearer '+veniceKey}
-    });
+    const r=await fetch('https://api.venice.ai/api/v1/models?type=text',{headers:{'Authorization':'Bearer '+veniceKey}});
     if(!r.ok)throw new Error(r.status);
-    const d=await r.json();
-    const models=(d.data||[]).map(m=>m.id).filter(Boolean);
-    _genLogLine(`Venice text models available: [${models.join(', ')}]`);
-    // Prefer larger/uncensored models; fall back down the list
-    const preferred=['llama-3.3-70b','llama-3.1-405b','llama-3.1-70b','mistral-nemo-12b','nous-hermes-3','qwen'];
-    const pick=preferred.find(p=>models.some(m=>m.toLowerCase().includes(p)))||models[0];
-    const matched=models.find(m=>m.toLowerCase().includes(pick))||models[0];
-    _veniceLLMModel=matched||'llama-3.3-70b';
-  }catch(e){
-    _veniceLLMModel='llama-3.3-70b'; // hardcoded fallback
-  }
-  _genLogLine(`Using Venice LLM model: ${_veniceLLMModel}`);
+    const models=((await r.json()).data||[]).map(m=>m.id).filter(Boolean);
+    _genLogLine(`Venice text models: [${models.join(', ')}]`);
+    const preferred=['llama-3.3-70b','llama-3.1-405b','llama-3.1-70b','mistral-nemo','nous-hermes'];
+    const pick=preferred.find(p=>models.some(m=>m.toLowerCase().includes(p)));
+    _veniceLLMModel=pick?models.find(m=>m.toLowerCase().includes(pick)):models[0]||'llama-3.3-70b';
+  }catch(e){_veniceLLMModel='llama-3.3-70b';}
+  _genLogLine(`Venice LLM model: ${_veniceLLMModel}`);
   return _veniceLLMModel;
 }
 
-async function buildNLPromptVenice(char,pose,clothing,state,toggles,veniceKey,onStage){
+// Shared prompt for all LLM distillation providers
+function buildDistilMessages(char,pose,clothing,state,toggles){
   const fem=char.gender==='Female'||char.gender==='Non-binary';
   const qualityAnchor='score_9, score_8_up, score_7_up, masterpiece, (photorealistic:1.3), (RAW photo:1.2), ultra detailed, 8k, (sharp focus:1.1)';
   const ctx=[];
@@ -1928,63 +1931,73 @@ async function buildNLPromptVenice(char,pose,clothing,state,toggles,veniceKey,on
   if(toggles?.wet)ctx.push('Modifier: wet skin, wet hair, glistening body');
   if(toggles?.oiled)ctx.push('Modifier: oiled skin, shiny skin');
   if(activeStyle)ctx.push(`Photography style: ${activeStyle.prompt}`);
-  const ctxStr=ctx.length?`\nAdditional context — include these verbatim in output:\n${ctx.join('\n')}`:'';
+  const ctxStr=ctx.length?`\nAdditional context — include verbatim:\n${ctx.join('\n')}`:'';
   const styleTail=activeStyle?activeStyle.tail:'solo, beautiful lighting, professional photography, high resolution';
-
   const sys=`You are a Stable Diffusion prompt engineer for lustify-sdxl photorealistic portraits. Given a natural-language character description (which may include explicit physical details), output a complete, precise SD tag prompt. Rules:
-1. Start with EXACTLY this quality anchor: ${qualityAnchor}
+1. Start with EXACTLY: ${qualityAnchor}
 2. Extract all visual attributes: age ("X year old"), ethnicity, skin tone, body type${fem?', breast size (A/B/C/D/DD cup)':''}, hair (color+length+style), eye color, face shape, distinctive features (tattoos, freckles, piercings, scars)
 3. Weight key identity tags at 1.1, very distinctive features at 1.15
-4. Add photographic detail tags: skin texture (pores, skin tone nuance), lighting (soft shadows, light direction, catchlights in eyes), depth of field (shallow focus, background blur), facial detail (defined lips, detailed iris, natural eyebrows)
+4. Add photographic detail: skin texture (pores, skin tone nuance), lighting (soft shadows, catchlights in eyes), depth of field (shallow focus, background blur), facial detail (defined lips, detailed iris, natural eyebrows)
 5. Subject is ${fem?'woman':'man'}, facing camera, looking at viewer
 6. Include any additional context provided
 7. End with: ${styleTail}
 Output ONLY the comma-separated tag list. No explanation, no markdown, no preamble.`;
+  return{sys,usr:`${fem?'Female':'Male'} character: ${char.nlDescription}${ctxStr}`};
+}
 
-  const usr=`${fem?'Female':'Male'} character: ${char.nlDescription}${ctxStr}`;
-  if(onStage)onStage('distil','Resolving Venice LLM model…');
-  const llmModel=await resolveVeniceLLMModel(veniceKey);
-  _genLogLine(`ℹ Sending ${char.nlDescription.length} char description to Venice LLM (${llmModel}) for distillation`);
-  if(onStage)onStage('distil','Extracting character from description…');
+async function llmFetch(endpoint,apiKey,model,messages,label){
   const ctrl=new AbortController();
   const timeout=setTimeout(()=>ctrl.abort(),45000);
   let resp;
   try{
-    resp=await fetch('https://api.venice.ai/api/v1/chat/completions',{
-      method:'POST',
-      signal:ctrl.signal,
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+veniceKey},
-      body:JSON.stringify({model:llmModel,messages:[{role:'system',content:sys},{role:'user',content:usr}],stream:false,max_tokens:700})
+    resp=await fetch(endpoint,{
+      method:'POST',signal:ctrl.signal,
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
+      body:JSON.stringify({model,messages,stream:false,max_tokens:700})
     });
   }finally{clearTimeout(timeout);}
-  if(!resp.ok){const errBody=await resp.text();throw new Error('Venice LLM distil '+resp.status+': '+errBody.slice(0,300));}
+  if(!resp.ok){const e=await resp.text();throw new Error(`${label} ${resp.status}: ${e.slice(0,300)}`);}
   const d=await resp.json();
-  _genLogLine(`Venice LLM response keys: [${Object.keys(d).join(', ')}]`);
-  const result=d.choices?.[0]?.message?.content?.trim()||'';
-  return result||null;
+  return d.choices?.[0]?.message?.content?.trim()||'';
+}
+
+async function distilNLDescription(char,pose,clothing,state,toggles,s,onStage){
+  const{sys,usr}=buildDistilMessages(char,pose,clothing,state,toggles);
+  const msgs=[{role:'system',content:sys},{role:'user',content:usr}];
+
+  if(s.dsKey){
+    _genLogLine(`ℹ Distilling via DeepSeek direct (${char.nlDescription.length} chars)`);
+    if(onStage)onStage('distil','Extracting character via DeepSeek…');
+    return await llmFetch('https://api.deepseek.com/chat/completions',s.dsKey,'deepseek-chat',msgs,'DeepSeek distil');
+  }
+  if(s.xaiKey){
+    _genLogLine(`ℹ Distilling via Grok/xAI (${char.nlDescription.length} chars)`);
+    if(onStage)onStage('distil','Extracting character via Grok…');
+    return await llmFetch('https://api.x.ai/v1/chat/completions',s.xaiKey,'grok-3-mini',msgs,'Grok distil');
+  }
+  // Fallback: Venice LLM (uncensored, key always available)
+  const llmModel=await resolveVeniceLLMModel(s.veniceKey);
+  _genLogLine(`ℹ Distilling via Venice LLM (${llmModel}, ${char.nlDescription.length} chars)`);
+  if(onStage)onStage('distil','Extracting character via Venice…');
+  return await llmFetch('https://api.venice.ai/api/v1/chat/completions',s.veniceKey,llmModel,msgs,'Venice LLM distil');
 }
 
 async function buildPrompt(char,pose,clothing,state,toggles,orKey,onStage,veniceKey){
+  const s=getSettings(); // used by distilNLDescription for dsKey/xaiKey
   let prompt;
   if(char.nlDescription){
-    // NL distillation uses Venice LLM — uncensored, no content restrictions, key always available
-    if(veniceKey){
-      try{
-        const nlPrompt=await buildNLPromptVenice(char,pose,clothing,state,toggles,veniceKey,onStage);
-        if(nlPrompt){
-          _genLogLine(`--- Venice LLM Distillation OK (${nlPrompt.length} chars) ---`);
-          prompt=nlPrompt;
-        }else{
-          _genLogLine(`⚠ Venice LLM Distillation returned empty — using truncated NL fallback`);
-          prompt=buildNLFallback(char,pose,clothing,state,toggles);
-        }
-      }catch(e){
-        _genLogLine(`⚠ Venice LLM Distillation FAILED: ${e.message} — using truncated NL fallback`);
-        logError('Venice LLM distillation',e);
+    try{
+      const nlPrompt=await distilNLDescription(char,pose,clothing,state,toggles,s,onStage);
+      if(nlPrompt){
+        _genLogLine(`--- Distillation OK (${nlPrompt.length} chars) ---`);
+        prompt=nlPrompt;
+      }else{
+        _genLogLine(`⚠ Distillation returned empty — using truncated NL fallback`);
         prompt=buildNLFallback(char,pose,clothing,state,toggles);
       }
-    }else{
-      _genLogLine(`ℹ No Venice key — using truncated NL fallback`);
+    }catch(e){
+      _genLogLine(`⚠ Distillation FAILED: ${e.message} — using truncated NL fallback`);
+      logError('NL distillation',e);
       prompt=buildNLFallback(char,pose,clothing,state,toggles);
     }
   }else{
@@ -2554,6 +2567,9 @@ function syncSettings(){
   const vk=$('sVeniceKey'),ok=$('sOrKey'),m=$('sModel'),vb=$('versionBadge');
   if(vk)vk.value=s.veniceKey||'';
   if(ok)ok.value=s.orKey||'';
+  const dk=$('sDsKey'),xk=$('sXaiKey');
+  if(dk)dk.value=s.dsKey||'';
+  if(xk)xk.value=s.xaiKey||'';
   if(m)m.value=s.model||'lustify-sdxl';
   if(vb)vb.textContent='v'+VERSION;
   const stepsEl=$('sSteps'),cfgEl=$('sCfg');
@@ -2570,11 +2586,14 @@ function saveSettingsNow(){
   LS.set('ps_settings',{
     veniceKey:$('sVeniceKey').value.trim(),
     orKey:$('sOrKey').value.trim(),
+    dsKey:$('sDsKey')?.value.trim()||'',
+    xaiKey:$('sXaiKey')?.value.trim()||'',
     model:$('sModel').value,
     steps:parseInt($('sSteps')?.value||30),
     cfgScale:parseFloat($('sCfg')?.value||7.5),
     resolution:getChipV('sResC')||'832x1216'
   });
+  _veniceLLMModel=null; // reset cached model so provider switch takes effect
 }
 
 // ── PWA ──
