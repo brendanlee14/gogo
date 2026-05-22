@@ -1895,6 +1895,17 @@ async function expandPromptOR(basePrompt,orKey){
   return result.trim()||basePrompt;
 }
 
+function sanitizeNLForOR(text){
+  // Cut at the start of any explicit anatomy section header
+  // OR's moderation blocks explicit content in the INPUT, not just the output
+  const sectionCutRx=/\n\s*(vulva|vagina|penis|genitals?|anus\b)/i;
+  const cut=text.search(sectionCutRx);
+  if(cut>0)text=text.slice(0,cut);
+  // Strip inline explicit terms that remain (e.g. nipples/areolae in a breast size section)
+  text=text.replace(/\b(areolae?|nipples?|labia\w*|clitoris\w*|pubic hair|vaginal|vulvar|erect\w*)\b/gi,'');
+  return text.trim();
+}
+
 async function buildNLPromptOR(char,pose,clothing,state,toggles,orKey,onStage){
   const fem=char.gender==='Female'||char.gender==='Non-binary';
   const qualityAnchor='score_9, score_8_up, score_7_up, masterpiece, (photorealistic:1.3), (RAW photo:1.2), ultra detailed, 8k, (sharp focus:1.1)';
@@ -1918,14 +1929,16 @@ async function buildNLPromptOR(char,pose,clothing,state,toggles,orKey,onStage){
 7. End with: ${styleTail}
 Output ONLY the comma-separated tag list. No explanation, no markdown, no preamble.`;
 
-  const usr=`${fem?'Female':'Male'} character: ${char.nlDescription}${ctxStr}`;
+  const safeDesc=sanitizeNLForOR(char.nlDescription);
+  _genLogLine(`ℹ NL sanitized for OR: ${char.nlDescription.length} → ${safeDesc.length} chars`);
+  const usr=`${fem?'Female':'Male'} character: ${safeDesc}${ctxStr}`;
   if(onStage)onStage('distil','Extracting character from description…');
   const resp=await fetch('https://openrouter.ai/api/v1/chat/completions',{
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+orKey},
     body:JSON.stringify({model:'deepseek/deepseek-v3-0324',messages:[{role:'system',content:sys},{role:'user',content:usr}],stream:true,max_tokens:700})
   });
-  if(!resp.ok)throw new Error('OR distil '+resp.status);
+  if(!resp.ok){const errBody=await resp.text();throw new Error('OR distil '+resp.status+': '+errBody.slice(0,300));}
   const reader=resp.body.getReader(),dec=new TextDecoder();
   let result='';
   while(true){
