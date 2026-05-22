@@ -760,7 +760,24 @@ function genLogStart(char,seed,model,seedSrc,hasOR){
   _genLogLine(`Model: ${model||'lustify-sdxl'} | Seed: ${seed} (${seedSrc}) | AI prompt: ${hasOR?'yes (OpenRouter)':'no (fallback)'}`);
   _genLogLine(`Toggles: sheer=${!!char._toggles?.sheer} hardNipples=${!!char._toggles?.hardNipples} erect=${!!char._toggles?.erect}`);
 }
-function _genLogLine(line){if(_genSession)_genSession.lines.push(line)}
+function _genLogLine(line){
+  if(!_genSession)return;
+  _genSession.lines.push(line);
+  // Render live so the user sees lines in real-time while spinning
+  const el=$('genLogBody');if(!el)return;
+  let live=document.getElementById('genLogLive');
+  if(!live){
+    el.innerHTML=''; // clear placeholder
+    live=document.createElement('div');
+    live.id='genLogLive';
+    live.style.cssText='padding:8px 0;border-bottom:1px solid var(--bdr)';
+    el.prepend(live);
+  }
+  const lines=_genSession.lines.map(ln=>`<div style="white-space:pre-wrap;word-break:break-all;color:${
+    ln.startsWith('⚠')||ln.startsWith('FATAL')?'#e07060':ln.startsWith('---')?'var(--creamd)':'var(--muted)'
+  }">${esc(ln)}</div>`).join('');
+  live.innerHTML=`<div style="margin-bottom:4px"><span style="color:var(--acc);font-weight:600;font-size:9px">[LIVE]</span> <span style="color:var(--creamd)">${esc(_genSession.char)}</span></div><div style="padding-left:4px;line-height:1.6">${lines}</div>`;
+}
 function genLogSave(outcome){
   if(!_genSession)return;
   _genSession.outcome=outcome;
@@ -2001,7 +2018,8 @@ async function distilNLDescription(char,pose,clothing,state,toggles,s,onStage){
 }
 
 async function buildPrompt(char,pose,clothing,state,toggles,orKey,onStage,veniceKey){
-  const s=getSettings(); // used by distilNLDescription for dsKey/xaiKey
+  const s=getSettings();
+  _genLogLine(`--- buildPrompt | nlDescription=${!!char.nlDescription} (${char.nlDescription?.length||0}c) | dsKey=${!!s.dsKey} xaiKey=${!!s.xaiKey} orKey=${!!orKey} ---`);
   let prompt;
   if(char.nlDescription){
     try{
