@@ -1921,23 +1921,22 @@ Output ONLY the comma-separated tag list. No explanation, no markdown, no preamb
   const usr=`${fem?'Female':'Male'} character: ${char.nlDescription}${ctxStr}`;
   _genLogLine(`ℹ Sending ${char.nlDescription.length} char description to Venice LLM for distillation`);
   if(onStage)onStage('distil','Extracting character from description…');
-  const resp=await fetch('https://api.venice.ai/api/v1/chat/completions',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+veniceKey},
-    body:JSON.stringify({model:'llama-3.3-70b',messages:[{role:'system',content:sys},{role:'user',content:usr}],stream:true,max_tokens:700})
-  });
+  const ctrl=new AbortController();
+  const timeout=setTimeout(()=>ctrl.abort(),45000);
+  let resp;
+  try{
+    resp=await fetch('https://api.venice.ai/api/v1/chat/completions',{
+      method:'POST',
+      signal:ctrl.signal,
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+veniceKey},
+      body:JSON.stringify({model:'llama-3.3-70b',messages:[{role:'system',content:sys},{role:'user',content:usr}],stream:false,max_tokens:700})
+    });
+  }finally{clearTimeout(timeout);}
   if(!resp.ok){const errBody=await resp.text();throw new Error('Venice LLM distil '+resp.status+': '+errBody.slice(0,300));}
-  const reader=resp.body.getReader(),dec=new TextDecoder();
-  let result='';
-  while(true){
-    const{done,value}=await reader.read();if(done)break;
-    for(const line of dec.decode(value).split('\n')){
-      if(line.startsWith('data: ')&&line!=='data: [DONE]'){
-        try{result+=(JSON.parse(line.slice(6)).choices?.[0]?.delta?.content||'')}catch{}
-      }
-    }
-  }
-  return result.trim()||null;
+  const d=await resp.json();
+  _genLogLine(`Venice LLM response keys: [${Object.keys(d).join(', ')}]`);
+  const result=d.choices?.[0]?.message?.content?.trim()||'';
+  return result||null;
 }
 
 async function buildPrompt(char,pose,clothing,state,toggles,orKey,onStage,veniceKey){
