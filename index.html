@@ -1907,16 +1907,22 @@ async function expandPromptOR(basePrompt,orKey){
 
 async function resolveVeniceLLMModel(veniceKey){
   if(_veniceLLMModel)return _veniceLLMModel;
+  _genLogLine(`[resolveVeniceLLMModel] fetching /api/v1/models?type=text…`);
+  const t0=Date.now();
   try{
     const r=await fetch('https://api.venice.ai/api/v1/models?type=text',{headers:{'Authorization':'Bearer '+veniceKey}});
+    _genLogLine(`[resolveVeniceLLMModel] HTTP ${r.status} in ${Date.now()-t0}ms`);
     if(!r.ok)throw new Error(r.status);
     const models=((await r.json()).data||[]).map(m=>m.id).filter(Boolean);
     _genLogLine(`Venice text models: [${models.join(', ')}]`);
     const preferred=['llama-3.3-70b','llama-3.1-405b','llama-3.1-70b','mistral-nemo','nous-hermes'];
     const pick=preferred.find(p=>models.some(m=>m.toLowerCase().includes(p)));
     _veniceLLMModel=pick?models.find(m=>m.toLowerCase().includes(pick)):models[0]||'llama-3.3-70b';
-  }catch(e){_veniceLLMModel='llama-3.3-70b';}
-  _genLogLine(`Venice LLM model: ${_veniceLLMModel}`);
+  }catch(e){
+    _genLogLine(`[resolveVeniceLLMModel] FAILED (${e.message}) — using hardcoded fallback`);
+    _veniceLLMModel='llama-3.3-70b';
+  }
+  _genLogLine(`Venice LLM model resolved: ${_veniceLLMModel}`);
   return _veniceLLMModel;
 }
 
@@ -1946,8 +1952,14 @@ Output ONLY the comma-separated tag list. No explanation, no markdown, no preamb
 }
 
 async function llmFetch(endpoint,apiKey,model,messages,label){
+  _genLogLine(`[llmFetch] ${label} → ${endpoint}`);
+  _genLogLine(`[llmFetch] model=${model} | sys=${messages[0]?.content?.length}c | usr=${messages[1]?.content?.length}c`);
+  const t0=Date.now();
   const ctrl=new AbortController();
-  const timeout=setTimeout(()=>ctrl.abort(),45000);
+  const timeout=setTimeout(()=>{
+    _genLogLine(`[llmFetch] ${label} ABORT — 45s timeout hit`);
+    ctrl.abort();
+  },45000);
   let resp;
   try{
     resp=await fetch(endpoint,{
@@ -1956,28 +1968,34 @@ async function llmFetch(endpoint,apiKey,model,messages,label){
       body:JSON.stringify({model,messages,stream:false,max_tokens:700})
     });
   }finally{clearTimeout(timeout);}
+  const elapsed=Date.now()-t0;
+  _genLogLine(`[llmFetch] ${label} HTTP ${resp.status} in ${elapsed}ms`);
   if(!resp.ok){const e=await resp.text();throw new Error(`${label} ${resp.status}: ${e.slice(0,300)}`);}
   const d=await resp.json();
-  return d.choices?.[0]?.message?.content?.trim()||'';
+  const result=d.choices?.[0]?.message?.content?.trim()||'';
+  _genLogLine(`[llmFetch] ${label} result: ${result.length} chars`);
+  if(!result)_genLogLine(`[llmFetch] WARNING: empty result — full response: ${JSON.stringify(d).slice(0,400)}`);
+  return result;
 }
 
 async function distilNLDescription(char,pose,clothing,state,toggles,s,onStage){
+  _genLogLine(`--- NL Distillation START | dsKey=${!!s.dsKey} xaiKey=${!!s.xaiKey} veniceKey=${!!s.veniceKey} ---`);
   const{sys,usr}=buildDistilMessages(char,pose,clothing,state,toggles);
+  _genLogLine(`[distil] sys=${sys.length}c usr=${usr.length}c`);
   const msgs=[{role:'system',content:sys},{role:'user',content:usr}];
 
   if(s.dsKey){
-    _genLogLine(`ℹ Distilling via DeepSeek direct (${char.nlDescription.length} chars)`);
+    _genLogLine(`[distil] provider=DeepSeek`);
     if(onStage)onStage('distil','Extracting character via DeepSeek…');
     return await llmFetch('https://api.deepseek.com/chat/completions',s.dsKey,'deepseek-chat',msgs,'DeepSeek distil');
   }
   if(s.xaiKey){
-    _genLogLine(`ℹ Distilling via Grok/xAI (${char.nlDescription.length} chars)`);
+    _genLogLine(`[distil] provider=Grok/xAI`);
     if(onStage)onStage('distil','Extracting character via Grok…');
     return await llmFetch('https://api.x.ai/v1/chat/completions',s.xaiKey,'grok-3-mini',msgs,'Grok distil');
   }
-  // Fallback: Venice LLM (uncensored, key always available)
+  _genLogLine(`[distil] provider=Venice LLM`);
   const llmModel=await resolveVeniceLLMModel(s.veniceKey);
-  _genLogLine(`ℹ Distilling via Venice LLM (${llmModel}, ${char.nlDescription.length} chars)`);
   if(onStage)onStage('distil','Extracting character via Venice…');
   return await llmFetch('https://api.venice.ai/api/v1/chat/completions',s.veniceKey,llmModel,msgs,'Venice LLM distil');
 }
