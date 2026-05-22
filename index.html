@@ -2090,7 +2090,7 @@ async function callVenice(prompt,seed,model,key,onStage,_retry=false){
   const resp=await fetch('https://api.venice.ai/api/v1/image/generate',{
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-    body:JSON.stringify({model:reqModel,prompt,negative_prompt:NEG,width:qW,height:qH,steps:qSteps,cfg_scale:qCfg,seed,safe_mode:false,return_binary:false})
+    body:JSON.stringify({model:reqModel,prompt,negative_prompt:NEG,width:qW,height:qH,steps:qSteps,cfg_scale:qCfg,seed,safe_mode:false,return_binary:false,hide_watermark:true})
   });
   const elapsed=((Date.now()-t0)/1000).toFixed(1);
   _genLogLine(`HTTP ${resp.status} ${resp.statusText} in ${elapsed}s`);
