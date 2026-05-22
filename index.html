@@ -2482,9 +2482,9 @@ async function wizGenPortrait(){
   const ov=$('wGenOv'),hint=$('wGenHint');
   if(ov)ov.classList.remove('gone');
   const onStage=(_stage,detail)=>{if(hint)hint.textContent=detail||'…'};
-  if(hint)hint.textContent=wc.nlDescription?'Extracting character…':s.orKey?'Building AI prompt…':'Building prompt…';
   try{
     const wc=gatherWizData();
+    if(hint)hint.textContent=wc.nlDescription?'Extracting character…':s.orKey?'Building AI prompt…':'Building prompt…';
     const seed=Math.floor(Math.random()*999999999);
     genLogStart(wc,seed,s.model,'random (wizard)',!!s.orKey);
     const prompt=await buildPrompt(wc,null,null,null,{},s.orKey,onStage,s.veniceKey);
