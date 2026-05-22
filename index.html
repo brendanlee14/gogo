@@ -1587,11 +1587,15 @@ function buildNLFallback(char,pose,clothing,state,toggles){
   const fem=char.gender==='Female'||char.gender==='Non-binary';
   if(fem)parts.push('facing camera, front view, looking at viewer');
 
-  // NL description is used directly as SD tags — the OR expander will polish it
-  // For fallback path, wrap descriptive phrases as weighted tags
+  // NL description: raw prose can't be used directly as SD tags.
+  // Truncate to a short extract — OR distillation is needed for full quality.
   const desc=char.nlDescription||'';
-  if(desc)parts.push(desc);
-  else parts.push(`${fem?'woman':'man'}`);
+  if(desc){
+    const brief=desc.length>300?desc.slice(0,300).replace(/\s+\S*$/,'')+'…':desc;
+    parts.push(brief);
+  }else{
+    parts.push(`${fem?'woman':'man'}`);
+  }
 
   // Clothing
   if(clothing){parts.push(clothing.prompt)}
@@ -1941,12 +1945,22 @@ async function buildPrompt(char,pose,clothing,state,toggles,orKey,onStage){
     if(orKey){
       try{
         const nlPrompt=await buildNLPromptOR(char,pose,clothing,state,toggles,orKey,onStage);
-        prompt=nlPrompt||buildNLFallback(char,pose,clothing,state,toggles);
+        if(nlPrompt){
+          _genLogLine(`--- OR Distillation OK (${nlPrompt.length} chars) ---`);
+          prompt=nlPrompt;
+        }else{
+          _genLogLine(`⚠ OR Distillation returned empty — using truncated NL fallback`);
+          toast('OR distillation returned empty — using simplified prompt');
+          prompt=buildNLFallback(char,pose,clothing,state,toggles);
+        }
       }catch(e){
-        console.warn('NL distil failed, using fallback:',e);
+        _genLogLine(`⚠ OR Distillation FAILED: ${e.message} — using truncated NL fallback`);
+        logError('OR distillation',e);
+        toast('OR distillation failed — using simplified prompt');
         prompt=buildNLFallback(char,pose,clothing,state,toggles);
       }
     }else{
+      _genLogLine(`ℹ No OR key — using truncated NL fallback (add OpenRouter key for best results)`);
       prompt=buildNLFallback(char,pose,clothing,state,toggles);
     }
   }else{
@@ -1954,7 +1968,10 @@ async function buildPrompt(char,pose,clothing,state,toggles,orKey,onStage){
     if(orKey){
       if(onStage)onStage('expand','Expanding prompt with AI…');
       try{prompt=await expandPromptOR(prompt,orKey)}
-      catch(e){console.warn('OR expansion failed, using base prompt:',e)}
+      catch(e){
+        _genLogLine(`⚠ OR Expansion FAILED: ${e.message} — using base prompt`);
+        console.warn('OR expansion failed, using base prompt:',e);
+      }
     }
   }
   // Inject face reference after quality anchors (not before them) so score_9 stays first
@@ -1987,6 +2004,14 @@ async function callVenice(prompt,seed,model,key,onStage,_retry=false){
   const qs=getSettings();
   const qSteps=qs.steps||30,qCfg=qs.cfgScale||7.5;
   const [qW,qH]=(qs.resolution||'832x1216').split('x').map(Number);
+  // Hard cap: lustify-sdxl (and most Venice models) enforce a 1500 char prompt limit
+  const PROMPT_LIMIT=1490;
+  if(prompt.length>PROMPT_LIMIT){
+    const cut=prompt.slice(0,PROMPT_LIMIT);
+    const lastComma=cut.lastIndexOf(',');
+    prompt=lastComma>PROMPT_LIMIT*0.6?cut.slice(0,lastComma):cut;
+    _genLogLine(`⚠ Prompt truncated to ${prompt.length} chars to fit model limit`);
+  }
   _genLogLine(`--- Venice request ${_retry?'#2 (retry)':'#1'} ---`);
   _genLogLine(`model=${reqModel} | seed=${seed} | width=${qW} | height=${qH} | steps=${qSteps} | cfg=${qCfg} | safe_mode=false`);
   const resp=await fetch('https://api.venice.ai/api/v1/image/generate',{
